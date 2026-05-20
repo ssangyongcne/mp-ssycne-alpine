@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport"
+        content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="stylesheet" href="../css/morpheus-style.css" />
+
+    <title>쌍용씨앤이 IOS 다운로드 화면</title>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="install">
+            <div class="top-header">
+                <h1 class="logo">Ssangyong C&amp;E</h1>
+                <p class="download">쌍용씨앤이의 모바일플랫폼을 다운로드합니다.</p>
+                <p class="download-install">IOS 설치방법</p>
+            </div>
+            <div class="content">
+                <div class="install-order">
+                    <div class="list">
+                        <ul>
+                            <li class="txt">하단의 App 다운로드 버튼을 터치하여 앱을 다운받습니다.</li>
+                            <li class="txt">아래 그림과 같은 창이 뜨면 설치 버튼을 클릭합니다.</li>
+                            <li class="img"><img src="../img/img_install_01.png" alt=""></li>
+                            <li class="txt">앱 클릭시 아래와 같은 창이 뜨면 취소 버튼을 클릭 후
+                                4번부터 설정방법을 참고합니다.</li>
+                            <li class="img"><img src="../img/img_install_02.png" alt=""></li>
+                            <li class="txt">[설정] - [일반] - VPN 및 기기 관리를 클릭 합니다.</li>
+                            <li class="img"><img src="../img/img_install_03.png" alt=""></li>
+                            <li class="txt">기업용앱 Ssangyong Cement Industrial Co.,Ltd 를 클릭합니다.</li>
+                            <li class="img"><img src="../img/img_install_04.png" alt=""></li>
+                            <li class="txt">'Ssangyoung Cement Industrial Co.,Ltd' 신뢰 버튼을 클릭합니다.</li>
+                            <li class="img"><img src="../img/img_install_05.png" alt=""></li>
+                            <li class="txt">신뢰 버튼을 클릭합니다.</li>
+                            <li class="img"><img src="../img/img_install_06.png" alt=""></li>
+                            <li class="txt">바탕화면으로 돌아가 다시 앱을 터치하여 사용합니다.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="app-download"><button type="button" onclick="downApk();"><span>App 다운로드</span></button></div>
+        </div>
+    </div>
+</body>
+
+</html>
+
+<script type="text/javascript">
+
+    function downApk() {
+        var host = location.host;
+        // 개발서버( SSL 미적용으로 DROP BOX를 이용한 배포 방식 )
+        if (host.indexOf("dev") >= 0) {
+            location.href = "itms-services://?action=download-manifest&url=https://dl.dropboxusercontent.com/s/s80w4a58v3dfp1r/kr.co.ssycne.mobile.plist";
+        } else {
+            location.href = "itms-services://?action=download-manifest&url=" + location.origin + "/uploadfiles/apk/kr.co.ssycne.mobile.plist";
+        }
+    }
+</script>

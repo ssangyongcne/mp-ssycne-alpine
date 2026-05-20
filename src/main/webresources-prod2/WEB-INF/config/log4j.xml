@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration status="debug">
+
+    <!-- Appenders -->
+    <appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{MM/dd HH:mm:ss}, %-5p (%C{3}) : %m%n" />
+        </Console>
+        <RollingFile name="file" fileName="/data/logs/log_gw/gw/msp_stdout.log" filePattern="/data/logs/log_gw/gw/msp_stdout.log.%d{yyyy-MM-dd}">
+            <PatternLayout>
+                <pattern>%d{MM/dd HH:mm:ss}, %-5p (%C{3}) : %m%n</pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true" />
+            </Policies>
+        </RollingFile>
+    </appenders>
+
+    <!-- Application Loggers -->
+    <!-- <Loggers>
+        <logger name="kr.msp" level="debug" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="FILE"/>
+        </logger>
+        <logger name="kr.co.sscm" level="debug" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="FILE"/>
+        </logger>
+        3rdparty Loggers
+        <logger name="org.springframework" level="info" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="FILE"/>
+        </logger>
+
+        Root Logger
+        <Root level="info" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="FILE"/>
+        </Root>
+    </Loggers> -->
+    <Loggers>
+        <Logger name="kr.msp" level="debug" />
+        <Logger name="kr.co.sscm" level="debug" />
+        <Logger name="org.springframework.core" level="info" />
+        <Logger name="org.springframework.ui" level="info" />
+        <Logger name="org.springframework.beans" level="info" />
+        <Logger name="org.springframework.context" level="info" />
+        <Logger name="org.springframework.web" level="info" />
+        <Logger name="org.springframework.jndi" level="info" />
+        <Logger name="java.sql" level="debug">
+            <AppenderRef ref="file"/>
+        </Logger>
+        <Root level="info">
+            <AppenderRef ref="file" />
+            <AppenderRef ref="file" />
+        </Root>
+    </Loggers>
+
+</configuration>

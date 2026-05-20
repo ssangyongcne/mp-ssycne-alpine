@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <!-- DB DataSource was pool JNDI 사용-->
+    <bean id="dataSource" class="org.springframework.jndi.JndiObjectFactoryBean">
+    	<property name="jndiName" value="${datasource.jndiname.msp.mobile}"/>
+     	<property name="resourceRef" value="true"/>
+  	</bean>
+
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+		<property name="configLocation" value="classpath:config/mybatis-config.xml" />
+ 		<property name="mapperLocations">
+			<list>
+				<value>${datasource.mybatis.msp.mobile.mapperLocation}</value>
+			</list>
+		</property>
+    	<!-- ## mapperLocations 설정은 msp.xml로 이동 함. 더이상 이곳에서 설정하지 않음. ## -->
+    </bean>
+
+    <bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+  		<constructor-arg index="0" ref="sqlSessionFactory"></constructor-arg>
+  	</bean>
+
+    <bean id="transactionManager"
+        class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource" />
+    </bean>
+
+	<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/>
+
+<!-- ============================================================================================== -->
+
+	<!-- DB DataSource was pool JNDI 사용-->
+    <bean id="dataSource1" class="org.springframework.jndi.JndiObjectFactoryBean">
+    	<property name="jndiName" value="${datasource.jndiname.msp.mobile}"/>
+     	<property name="resourceRef" value="true"/>
+  	</bean>
+
+    <bean id="sqlSessionFactory1" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource1" />
+		<property name="configLocation" value="classpath:config/mybatis-config.xml" />
+ 		<property name="mapperLocations">
+			<list>
+				<value>${datasource.mybatis.msp.sscm.mapperLocation1}</value>
+			</list>
+		</property>
+    	<!-- ## mapperLocations 설정은 msp.xml로 이동 함. 더이상 이곳에서 설정하지 않음. ## -->
+    </bean>
+
+    <bean id="sqlSession1" class="org.mybatis.spring.SqlSessionTemplate">
+  		<constructor-arg index="0" ref="sqlSessionFactory1"></constructor-arg>
+  	</bean>
+
+    <bean id="transactionManager1"
+        class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource1" />
+    </bean>
+
+	<tx:annotation-driven transaction-manager="transactionManager1" proxy-target-class="true"/>
+
+<!-- ============================================================================================== -->
+
+	<!-- for sscm -->
+    <bean id="dataSource2" class="org.springframework.jndi.JndiObjectFactoryBean">
+    	<property name="jndiName" value="${datasource.jndiname.msp.mobile2}"/>
+     	<property name="resourceRef" value="true"/>
+  	</bean>
+
+    <bean id="sqlSessionFactory2" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource2" />
+		<property name="configLocation" value="classpath:config/mybatis2-config.xml" />
+ 		<property name="mapperLocations">
+			<list>
+				<value>${datasource.mybatis.msp.sscm.mapperLocation2}</value>
+			</list>
+		</property>
+    	<!-- ## mapperLocations 설정은 msp.xml로 이동 함. 더이상 이곳에서 설정하지 않음. ## -->
+    </bean>
+
+   	<bean id="sqlSession2" class="org.mybatis.spring.SqlSessionTemplate">
+  		<constructor-arg index="0" ref="sqlSessionFactory2"></constructor-arg>
+  	</bean>
+
+	<bean id="transactionManager2"
+        class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource2" />
+    </bean>
+
+	<tx:annotation-driven transaction-manager="transactionManager2" proxy-target-class="true"/>
+
+    <!-- 샘플 DB 연동 설정  -->
+    <!-- <import resource="sample-mybatis-context.xml"/> -->
+
+</beans>

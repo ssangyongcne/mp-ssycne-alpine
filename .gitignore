@@ -1,0 +1,12 @@
+# Eclipse 관련
+.classpath
+.project
+.settings/
+
+# Maven 빌드 산출물
+target/
+build/
+
+# 배포 폴더
+deploy1/
+deploy2/

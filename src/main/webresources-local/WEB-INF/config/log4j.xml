@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration status="debug">
+
+    <!-- Appenders  test-->
+    <appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{MM/dd HH:mm:ss}, %-5p (%C{3}) : %m%n" />
+        </Console>
+        <RollingFile name="file" fileName="/log/morpheus/gw/log4j/msp_stdout.${date:yyyy-MM-dd}.log" filePattern="/log/morpheus/gw/log4j/msp_stdout.%d{yyyy-MM-dd}.%i.log">
+            <PatternLayout>
+                <pattern>%d{MM/dd HH:mm:ss}, %-5p (%C{3}) : %m%n</pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true" />
+            </Policies>
+        </RollingFile>
+    </appenders>
+
+    <!-- Application Loggers -->
+    <!-- <Loggers>
+        <logger name="kr.msp" level="debug" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="FILE"/>
+        </logger>
+        <logger name="kr.co.sscm" level="debug" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="FILE"/>
+        </logger>
+        3rdparty Loggers
+        <logger name="org.springframework" level="info" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="FILE"/>
+        </logger>
+
+        Root Logger
+        <Root level="info" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="FILE"/>
+        </Root>
+    </Loggers -->
+    <Loggers>
+    <Logger name="kr.msp.core.license" level="debug" additivity="false">
+		  <AppenderRef ref="console"/> <!-- 프로젝트에서 쓰는 Appender 이름으로 -->
+		</Logger>
+		<Logger name="kr.msp.util.CryptoUtils" level="debug" additivity="false">
+		  <AppenderRef ref="console"/>
+		</Logger>
+
+	    <!-- MyBatis 전체 -->
+		  <Logger name="org.apache.ibatis" level="debug" additivity="false">
+		    <AppenderRef ref="console"/>
+		    <AppenderRef ref="file"/>
+		  </Logger>
+		
+		  <!-- MyBatis 로깅 서브패키지 (Preparing/Parameters의 핵심) -->
+		  <Logger name="org.apache.ibatis.logging" level="trace" additivity="false">
+		    <AppenderRef ref="console"/>
+		    <AppenderRef ref="file"/>
+		  </Logger>
+		
+		  <!-- 실행 단계에서 추가 로그 보고 싶으면 -->
+		  <Logger name="org.apache.ibatis.executor" level="debug" additivity="false">
+		    <AppenderRef ref="console"/>
+		    <AppenderRef ref="file"/>
+		  </Logger>
+		
+		  <!-- 매핑 단계(선택) -->
+		  <Logger name="org.apache.ibatis.mapping" level="debug" additivity="false">
+		    <AppenderRef ref="console"/>
+		    <AppenderRef ref="file"/>
+		  </Logger>
+    
+        <Logger name="kr.msp" level="debug" />
+        <Logger name="kr.co.sscm" level="debug" />
+        <Logger name="org.springframework.core" level="info" />
+        <Logger name="org.springframework.ui" level="info" />
+        <Logger name="org.springframework.beans" level="info" />
+        <Logger name="org.springframework.context" level="info" />
+        <Logger name="org.springframework.web" level="info" />
+        <Logger name="org.springframework.jndi" level="info" />
+        <Logger name="java.sql" level="info" />
+        <!-- <Logger name="java.sql" level="debug">
+            <AppenderRef ref="file"/>
+        </Logger> -->
+        <Root level="debug">
+            <AppenderRef ref="file" />
+            <AppenderRef ref="console" />
+        </Root>
+    </Loggers>
+
+</configuration>

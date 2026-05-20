@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ssyc.GwDao">
+
+	<!-- 설비고장 신고 목록 조회 -->
+	<select id="selectFaultReportsList" resultType="camelMap">
+
+		/* GwDao.selectFaultReportsList */
+		SELECT 
+			FACT_CD
+			, FACT_NM
+			, PROGRESS_CD
+			, EXPECT_HOUR_YN
+			, EXPECT_HOUR
+			, EXPECT_UNKNOWN_YN
+		FROM TB_FAC_FAULT_RPT
+		WHERE
+			USE_YN = 'Y'
+
+	</select>
+	
+	<!-- 설비고장 신고 상세 조회 -->
+	<select id="selectFaultReportsDetail" parameterType="hashmap" resultType="camelMap">
+
+		/* GwDao.selectFaultReportsDetail */
+		SELECT 
+			FACT_CD
+			, FACT_NM
+			, OVERALL_AVAIL_CD
+			, PROGRESS_CD
+			, BREAK_HOUR_YN
+			, BREAK_HOUR
+			, EXPECT_HOUR_YN
+			, EXPECT_HOUR
+			, EXPECT_UNKNOWN_YN
+		FROM TB_FAC_FAULT_RPT
+		WHERE
+			USE_YN = 'Y'
+		AND
+			FACT_CD = #{factCd}
+
+	</select>
+	
+	<!-- 설비고장 신고 설비그룹별 상태 조회 -->
+	<select id="selectEquipGrpList" parameterType="hashmap" resultType="camelMap">
+
+		/* GwDao.selectEquipGrpList */
+		SELECT 
+			EQUIP_GRP_CD
+			, AVAIL_CD
+		FROM TB_FAC_FAULT_RPT_EQUIP
+		WHERE
+			USE_YN = 'Y'
+		AND
+			FACT_CD = #{factCd}
+
+	</select>
+	
+	<!-- 설비고장 신고 수정 -->
+	<update id="updateFaultReports" parameterType="hashmap">
+	
+		/* GwDao.updateFaultReports */
+		UPDATE 	TB_FAC_FAULT_RPT
+		SET 	OVERALL_AVAIL_CD = #{overallAvailCd} 
+				, PROGRESS_CD = #{progressCd} 
+				, BREAK_HOUR_YN = #{breakHourYn} 
+				, BREAK_HOUR = #{breakHour} 
+				, EXPECT_HOUR_YN = #{expectHourYn} 
+				, EXPECT_HOUR = #{expectHour} 
+				, EXPECT_UNKNOWN_YN = #{expectUnknownYn} 
+		WHERE 	FACT_CD = #{factCd} 
+		
+	</update>
+	
+	<!-- 설비그룹별 상태 등록 or 수정 -->
+	<insert id="upsertEquipGrpList">
+	
+		/* GwDao.upsertEquipGrpList */
+		INSERT INTO TB_FAC_FAULT_RPT_EQUIP (FACT_CD, EQUIP_GRP_CD, AVAIL_CD)
+		VALUES
+		<foreach collection="equipGrpList" item="item" separator=",">
+			(#{factCd}, #{item.equipGrpCd}, #{item.availCd})
+		</foreach>
+		ON DUPLICATE KEY UPDATE
+		AVAIL_CD = VALUES(AVAIL_CD)
+	</insert>
+	
+	<!-- 등록된 공장 코드인지 확인 -->
+	<select id="selectFactCdCount" parameterType="String" resultType="int">
+
+		/* GwDao.selectFactCdCount */
+		SELECT 
+			COUNT(*)
+		FROM TB_FAC_FAULT_RPT
+		WHERE
+			USE_YN = 'Y'
+		AND
+			FACT_CD = #{factCd}
+
+	</select>
+	
+</mapper>
+

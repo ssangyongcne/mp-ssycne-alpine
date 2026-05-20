@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <legacy_sys>
+        <checkLoopTime>10</checkLoopTime>
+        <!--쉼표 구분자로 넣는다 ex)http://211.241.199.215:18080/,http://211.241.199.215:18080/,http://127.0.0.1:8080/msp-gw/-->
+        <host_list></host_list>
+    </legacy_sys>
+    <!-- <jdbc>
+        <driverClassName>com.microsoft.sqlserver.jdbc.SQLServerDriver</driverClassName>
+        <url>+Um1gu42Jlg3bCnvDmjVKsHlBRl4RM82L/fM5qtoOIA6SqJ35jmd+lfKdKIcjaqROXM0xCQqD4O3RyferBQ+7Q==</url>
+        <username>vTn+Iu2LqRJIl3f4EfbtBg==</username>
+        <password>NFCBNYUzfNNrutkD4TpmDw==</password>
+    </jdbc>
+    <jdbc2>
+        <driverClassName>com.microsoft.sqlserver.jdbc.SQLServerDriver</driverClassName>
+        <url>+Um1gu42Jlg3bCnvDmjVKsHlBRl4RM82L/fM5qtoOIA6SqJ35jmd+lfKdKIcjaqROXM0xCQqD4O3RyferBQ+7Q==</url>
+        <username>vTn+Iu2LqRJIl3f4EfbtBg==</username>
+        <password>NFCBNYUzfNNrutkD4TpmDw==</password>
+    </jdbc2> -->
+    <!--아래의 사용하시고자 하는 엘리먼트를 확장해서 사용하세요.-->
+    <test>
+        <id>TEST01</id>
+    </test>
+    <upload>
+        <path>/Users/mium2/temp/trash/upload</path>
+    </upload>
+    <push>
+    	<!-- push was url -->
+    	<url>http://150.2.150.30:82/</url>
+	    <upload>
+	        <absolute_path>/data/upload/uploadfiles/push</absolute_path>
+	        <path>uploadfiles</path>
+	        <dir>push</dir>
+	    </upload>
+    </push>
+    <gw>
+    	<!-- gw web url -->
+    	<url>http://221.149.230.144</url>
+    </gw>
+    <test>
+        <aaa>1111</aaa>
+    </test>
+    <push>
+
+    </push>
+    <eai>
+        <endpoint>
+            <base>http://150.2.150.129:7001/SIS_EAI_Process/com/sis/eai/flowcontrol/mobile/</base>	<!-- 개발 -->
+			<mobileLoginProcess>SSYCNE_JMA_01.JMA_028.ws:JMA_028_P</mobileLoginProcess>
+            <bgtCMPRProcess>SSYCNE_JMA_01.JMA_002.ws:JMA_002_P</bgtCMPRProcess>
+            <bgtCMPRYearProcess>SSYCNE_JMA_01.JMA_003.ws:JMA_003_P</bgtCMPRYearProcess>
+            <fldSiteQTYProcess>SSYCNE_JMA_01.JMA_006.ws:JMA_006_P</fldSiteQTYProcess>
+            <fldSiteQTYDTLProcess>SSYCNE_JMA_01.JMA_007.ws:JMA_007_P</fldSiteQTYDTLProcess>
+            <fwrdREQProcess>SSYCNE_JMA_01.JMA_008.ws:JMA_008_P</fwrdREQProcess>
+            <fwrdREQDTLProcess>SSYCNE_JMA_01.JMA_009.ws:JMA_009_P</fwrdREQDTLProcess>
+            <fwrdREQEXCUTEProcess>SSYCNE_JMA_01.JMA_010.ws:JMA_010_P</fwrdREQEXCUTEProcess>
+			<fwrdSTOCKALLProcess>SSYCNE_JMA_01.JMA_037.ws:JMA_037_P</fwrdSTOCKALLProcess>
+			<fwrdSTOCK1Process>SSYCNE_JMA_01.JMA_038.ws:JMA_038_P</fwrdSTOCK1Process>
+			<fwrdSTOCK2Process>SSYCNE_JMA_01.JMA_039.ws:JMA_039_P</fwrdSTOCK2Process>
+			<fwrdTIMEProcess>SSYCNE_JMA_01.JMA_014.ws:JMA_014_P</fwrdTIMEProcess>
+			<hmatSTOCKProcess>SSYCNE_JMA_01.JMA_036.ws:JMA_036_P</hmatSTOCKProcess>
+      		<authProcess>SSYCNE_JMA_01.JMA_015.ws:JMA_015_P</authProcess>
+      		<commonCode>SSYCNE_JMA_01.JMA_016.ws:JMA_016_P</commonCode>
+      		<rcptListProcess>JMA131Process.jpd</rcptListProcess>
+      		<rcptListDtlProcess>JMA132Process.jpd</rcptListDtlProcess>
+      		<rcptListEXCUTElProcess>JMA133Process.jpd</rcptListEXCUTElProcess>
+      		<noteNoListProcess>JMA134Process.jpd</noteNoListProcess>
+      		<rcptAcctListProcess>JMA135Process.jpd</rcptAcctListProcess>
+      		<vrtlAcctNoListProcess>JMA136Process.jpd</vrtlAcctNoListProcess>
+      		<asgnListProcess>SSYCNE_JMA_01.JMA_023.ws:JMA_023_P</asgnListProcess>
+      		<asgnSaveProcess>SSYCNE_JMA_01.JMA_024.ws:JMA_024_P</asgnSaveProcess>
+      		<patrolListProcess>SSYCNE_JMA_01.JMA_031.ws:JMA_031_P</patrolListProcess>
+      		<patrolDtlProcess>SSYCNE_JMA_01.JMA_032.ws:JMA_032_P</patrolDtlProcess>
+      		<patrolInsertProcess>SSYCNE_JMA_01.JMA_033.ws:JMA_033_P</patrolInsertProcess>
+      		<patrolUpdateProcess>SSYCNE_JMA_01.JMA_034.ws:JMA_034_P</patrolUpdateProcess>
+      		<patrolDeleteProcess>SSYCNE_JMA_01.JMA_035.ws:JMA_035_P</patrolDeleteProcess>
+            <historyInsertProcess>SSYCNE_JMA_01.JMA_029.ws:JMA_029_P</historyInsertProcess>
+            <empListProcess>JMA103Process.jpd</empListProcess>
+      		<voycntListProcess>JMA144Process.jpd</voycntListProcess>
+      		<voycntUpdateProcess>JMA145Process.jpd</voycntUpdateProcess>
+            <exprsMatListProcess>JMA146Process.jpd</exprsMatListProcess>
+        </endpoint>
+	</eai>
+	<server>
+    	<type>dev</type>
+    </server>
+    <app>
+    	<id>kr.co.ssycne.mobile</id>
+    </app>
+    <db>
+    	<use>false</use>
+    </db>
+    <login>
+    	<length>17</length>
+    </login>
+</configuration>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE mapper
+                PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+                "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ssyc.FwrdDao">
+
+	<!-- 시간대별내수출하현황 -->
+	<select id="getJMA127Process" parameterType="FwrdReqDto" resultType="Map">
+
+		/* getJMA127Process */
+		SELECT TM_FG AS TM_FG,
+           DECODE(TM_FG,'01','6시 이전',
+                        '02','~8시',
+                        '03','~10시',
+                        '04','~12시',
+                        '05','~13시',
+                        '06','~14시',
+                        '07','~15시',
+                        '08','~16시',
+                        '09','~17시',
+                        '10','~18시',
+                        '11','18시 이후') TM_GBN,
+           NOW_QTY,
+           NVL(NOW_QTY,0) - NVL(YESTER_QTY,0) NOW_RAT,
+           ACC_NOW_QTY,
+           NVL(ACC_NOW_QTY,0) - NVL(ACC_YESTER_QTY,0) YESTER_RAT
+      FROM
+          (
+           SELECT TM_FG,
+                  NOW_QTY,
+                  SUM(NOW_QTY) OVER (ORDER BY TM_FG RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) ACC_NOW_QTY,
+                  YESTER_QTY,
+                  SUM(YESTER_QTY) OVER (ORDER BY TM_FG RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) ACC_YESTER_QTY
+             FROM
+                 (
+                  SELECT
+	                     LPAD(TM_FG,2,'0') TM_FG,
+                         SUM(DECODE(DT_FG,1,QTY,0)) NOW_QTY,
+                         SUM(DECODE(DT_FG,2,QTY,0)) YESTER_QTY
+                    FROM
+                        (
+                         SELECT
+                                DT_FG,            /* 1 : 상위 그리드, 2: 전일 */
+                                FWRD_FACT_CD,     /* 출하공장 */
+                                TM_FG,            /* pivot column,...1 ~ 11 */
+                                NVL(SUM(QTY),0)	QTY
+                           FROM
+                               (
+                                SELECT FWRD_FACT_CD,
+                                       DECODE(FWRD_DT,#{fwrdDt} /* 1, :FWRD_DT */,'1',TO_CHAR(TO_DATE(#{fwrdDt} /* 2, :FWRD_DT */,'YYYYMMDD')-1,'YYYYMMDD'),'2','3')	DT_FG,
+                                       MARKT.CF_FWRD_TM(FWRD_TM)    TM_FG,
+                                       T1.FWRD_QTY * CE_CONV_UT     QTY
+                                  FROM MARKT.CT_FWRD T1,
+                                       COMN.AM_PROD_MSTR T2
+                                 WHERE T1.PROD_CD = T2.PROD_CD
+                                   AND (SAL_FORM_CD NOT IN ('CX','TR') OR ( SAL_FORM_CD = 'TR' AND ARRV_FACT_CD > '0200') )
+                                   AND SUBSTR(SAL_FORM_CD,1,1)||TRSP_MEAN_CD NOT IN ('ES' ,'EK')
+                                   AND T1.PROD_CD NOT IN ('BK077','BK027','CK395','CK396')
+                                   AND FWRD_FACT_CD LIKE #{factCd} /* 3, :FACT_CD */||'%'
+                                   AND FWRD_DT IN (#{fwrdDt} /* 4, :FWRD_DT */, TO_CHAR(TO_DATE(#{fwrdDt} /* 5, :FWRD_DT */,'YYYYMMDD')-1,'YYYYMMDD'))
+                               ) TA1
+                          GROUP BY
+                                DT_FG,
+                                FWRD_FACT_CD,
+                                TM_FG
+                        ) TA1,
+                        (
+                         SELECT T2.SAL_UT_CD,T2.SAL_UT_NM,T1.SRT_ORD, CE_COAST_INLND_FG_CD
+                           FROM COMN.AM_SAL_UT_STRCT T1,
+                                COMN.AM_SAL_UT T2
+                          WHERE T1.SAL_PART_CD = '01'
+                            AND T1.CE_FWRD_FACT_KND_CD IN ('1','2','3')
+                            AND T1.SAL_UT_CD = T2.SAL_UT_CD
+                        ) TA2
+                   WHERE TA1.FWRD_FACT_CD = TA2.SAL_UT_CD
+                   GROUP BY
+                         TM_FG
+                 )
+          )
+     ORDER BY
+		       TM_FG
+	</select>
+</mapper>

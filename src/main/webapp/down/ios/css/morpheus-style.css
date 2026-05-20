@@ -1,0 +1,24 @@
+@charset "utf-8";
+@import "morpheus-common.css";
+
+.wrapper {background: url(../img/bg01.png) left 2.4rem / 3.3rem no-repeat;}
+.install {display: flex; flex-direction: column; align-items: stretch; height: 100%; background: url(../img/bg02.png) right -.1rem top 10.4rem / 5.9rem no-repeat;}
+.top-header {padding: 5.9rem 3rem 0 3rem;text-align: center;}
+h1.logo {height: 2.8rem; font-size: 0; text-indent: -9999px; background: url(../img/img_logo.png) center top / auto 100% no-repeat;}
+.download {margin-top: 2.8rem; color: #231916; font-size: 1.2rem; font-weight: 500; line-height: 1.5rem; text-align: center; }
+.download-install { display: inline-block; min-width: 15.6rem; margin: 1.7rem auto 0; padding: .9rem 2.6rem .8rem; border-radius: 2rem; color: #fff; font-size: 1.4rem; font-weight: 700; line-height: 1.7rem; text-align: center;background-color: #494949;}
+
+.content {padding: .5rem 1.6rem 0;}
+.install-order {padding: 0 0 1.8rem;}
+
+.list ul {counter-reset : numbering; list-style-type:none;}
+.list li.txt {position: relative; padding: 2.8rem 0 0 1.4rem; color: #666; font-size: 1.4rem; line-height: 1.8rem; word-break: keep-all;}
+.list li strong {font-weight: 500;color: #141223; font-size: 1.4rem;line-height: 1.4;vertical-align: top;}
+.list li p {color: #000;font-size: 1.3rem;font-weight: normal;line-height: 1.4;}
+.list li.txt::before {counter-increment : numbering; content : counter(numbering)'.'; position: absolute; left: 0; top: 2.8rem; margin-right:1rem; display: inline-block;color: #666; font-size: 1.4rem;}
+.img {overflow: hidden; margin: 1.3rem 1.6rem .9rem; border-radius: 8px; text-align: center;}
+.img img {max-width: 36rem;width: 100%;}
+
+.app-download {margin-top: auto;}
+.app-download button {display: block; width: 100%; height: 5.6rem; height:calc(env(safe-area-inset-bottom) + 5.6rem);height:calc(constant(safe-area-inset-bottom) + 5.6rem); line-height: 1; background-color: #ea002c;}
+.app-download button span {display: inline-block; padding-left: 2.8rem; color: #fff; font-size: 1.6rem; line-height: 1.8rem; font-weight: 700; background: #e5002d url(../img/ic_store_download.png) left center / 1.8rem no-repeat;}
