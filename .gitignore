@@ -1,12 +1,12 @@
-# Eclipse 관련
-.classpath
-.project
-.settings/
+# Eclipse workspace metadata and output
+/bin/
+/.metadata/
+/.recommenders/
 
-# Maven 빌드 산출물
-target/
+# Maven build output
+/target/
 build/
 
-# 배포 폴더
+# Deployment output
 deploy1/
 deploy2/

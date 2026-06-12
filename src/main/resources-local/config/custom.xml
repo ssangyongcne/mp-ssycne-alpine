@@ -74,6 +74,7 @@
       		<patrolInsertProcess>JMA141Process.jpd</patrolInsertProcess>
       		<patrolUpdateProcess>JMA142Process.jpd</patrolUpdateProcess>
       		<patrolDeleteProcess>JMA143Process.jpd</patrolDeleteProcess>
+            <historyInsertProcess>SSYCNE_JMA_01.JMA_029.ws:JMA_029_P</historyInsertProcess>
       		<voycntListProcess>JMA144Process.jpd</voycntListProcess>
       		<voycntUpdateProcess>JMA145Process.jpd</voycntUpdateProcess>
       		<exprsMatListProcess>JMA146Process.jpd</exprsMatListProcess>
