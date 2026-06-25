@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ssyc.AlpineAuthDao">
+
+	<resultMap id="alpineUserResultMap" type="kr.co.sscm.alpine.auth.dto.AlpineUserDto">
+		<id property="userNo" column="user_no" />
+		<result property="userNm" column="user_nm" />
+		<result property="deptNm" column="dept_nm" />
+		<result property="dutyNm" column="duty_nm" />
+		<result property="phone" column="phone" />
+		<result property="pw" column="pw" />
+		<result property="auth" column="auth" />
+	</resultMap>
+
+	<select id="selectLoginUser" parameterType="String" resultMap="alpineUserResultMap">
+		/* AlpineAuthDao.selectLoginUser */
+		SELECT
+			user_no,
+			user_nm,
+			dept_nm,
+			duty_nm,
+			phone,
+			pw,
+			auth
+		FROM ap_user
+		WHERE user_no = #{userNo}
+		AND use_yn = 'Y'
+	</select>
+
+	<update id="updateLoginDdtm" parameterType="String">
+		/* AlpineAuthDao.updateLoginDdtm */
+		UPDATE ap_user
+		SET login_ddtm = NOW()
+		WHERE user_no = #{userNo}
+	</update>
+
+</mapper>
