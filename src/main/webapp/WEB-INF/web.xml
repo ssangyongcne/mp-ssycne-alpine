@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
@@ -112,6 +112,17 @@
 		<servlet-name>msp-gw</servlet-name>
 		<url-pattern>/</url-pattern>
 	</servlet-mapping>
+	<!-- Disable unsafe HTTP methods for local security audit compliance. -->
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name>Restricted HTTP Methods</web-resource-name>
+			<url-pattern>/*</url-pattern>
+			<http-method>PUT</http-method>
+			<http-method>DELETE</http-method>
+			<http-method>TRACE</http-method>
+		</web-resource-collection>
+		<auth-constraint/>
+	</security-constraint>
 
 	<listener>
 		<listener-class>kr.msp.base.GWContextListener</listener-class>
@@ -120,25 +131,28 @@
 	<!-- Error Page Definition -->
 	<error-page>
 		<error-code>403</error-code>
-		<location>/error.jsp?ERROR=403</location>
+		<location>/WEB-INF/views/thy/error.html</location>
 	</error-page>
 	<error-page>
 		<error-code>404</error-code>
-		<location>/error.jsp?ERROR=404</location>
+		<location>/WEB-INF/views/thy/error.html</location>
 	</error-page>
 	<error-page>
 		<error-code>405</error-code>
-		<location>/error.jsp?ERROR=405</location>
+		<location>/WEB-INF/views/thy/error.html</location>
 	</error-page>
 	<error-page>
 		<error-code>500</error-code>
-		<location>/error.jsp?ERROR=500</location>
+		<location>/WEB-INF/views/thy/error.html</location>
 	</error-page>
 	<error-page>
 		<error-code>503</error-code>
-		<location>/error.jsp?ERROR=503</location>
+		<location>/WEB-INF/views/thy/error.html</location>
 	</error-page>
-	<!-- was 이중화 위한 설정 -->
+	<error-page>
+		<exception-type>java.lang.Throwable</exception-type>
+		<location>/WEB-INF/views/thy/error.html</location>
+	</error-page>	<!-- was ?댁쨷???꾪븳 ?ㅼ젙 -->
 	<distributable/>
 
 
@@ -155,3 +169,6 @@
   </resource-ref> -->
 
 </web-app>
+
+
+

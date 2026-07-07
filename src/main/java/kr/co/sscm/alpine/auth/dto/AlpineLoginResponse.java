@@ -2,58 +2,67 @@ package kr.co.sscm.alpine.auth.dto;
 
 public class AlpineLoginResponse {
 
-	private String EMPNO;
-	private String UZR_NM;
-	private String DEPT_NM;
-	private String DUTY_NM;
-	private String PHONE;
-	private String ADMIN_YN;
+	private String userNo;
+	private String userNm;
+	private String deptNm;
+	private String dutyNm;
+	private String phone;
+	private String auth;
+	private String firstLogin;
 
-	public String getEMPNO() {
-		return EMPNO;
+	public String getUserNo() {
+		return userNo;
 	}
 
-	public void setEMPNO(String EMPNO) {
-		this.EMPNO = EMPNO;
+	public void setUserNo(String userNo) {
+		this.userNo = userNo;
 	}
 
-	public String getUZR_NM() {
-		return UZR_NM;
+	public String getUserNm() {
+		return userNm;
 	}
 
-	public void setUZR_NM(String UZR_NM) {
-		this.UZR_NM = UZR_NM;
+	public void setUserNm(String userNm) {
+		this.userNm = userNm;
 	}
 
-	public String getDEPT_NM() {
-		return DEPT_NM;
+	public String getDeptNm() {
+		return deptNm;
 	}
 
-	public void setDEPT_NM(String DEPT_NM) {
-		this.DEPT_NM = DEPT_NM;
+	public void setDeptNm(String deptNm) {
+		this.deptNm = deptNm;
 	}
 
-	public String getDUTY_NM() {
-		return DUTY_NM;
+	public String getDutyNm() {
+		return dutyNm;
 	}
 
-	public void setDUTY_NM(String DUTY_NM) {
-		this.DUTY_NM = DUTY_NM;
+	public void setDutyNm(String dutyNm) {
+		this.dutyNm = dutyNm;
 	}
 
-	public String getPHONE() {
-		return PHONE;
+	public String getPhone() {
+		return phone;
 	}
 
-	public void setPHONE(String PHONE) {
-		this.PHONE = PHONE;
+	public void setPhone(String phone) {
+		this.phone = phone;
 	}
 
-	public String getADMIN_YN() {
-		return ADMIN_YN;
+	public String getAuth() {
+		return auth;
 	}
 
-	public void setADMIN_YN(String ADMIN_YN) {
-		this.ADMIN_YN = ADMIN_YN;
+	public void setAuth(String auth) {
+		this.auth = auth;
+	}
+
+	public String getFirstLogin() {
+		return firstLogin;
+	}
+
+	public void setFirstLogin(String firstLogin) {
+		this.firstLogin = firstLogin;
 	}
 }

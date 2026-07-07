@@ -1,4 +1,4 @@
-package kr.co.sscm.alpine.common.dto;
+﻿package kr.co.sscm.alpine.common.dto;
 
 public class ApiResponse<T> {
 
@@ -17,6 +17,10 @@ public class ApiResponse<T> {
 
 	public static <T> ApiResponse<T> success(T result) {
 		return new ApiResponse<T>("200", "OK", result);
+	}
+
+	public static <T> ApiResponse<T> fail(String resultCode, String resultMsg) {
+		return new ApiResponse<T>(resultCode, resultMsg, null);
 	}
 
 	public static <T> ApiResponse<T> notImplemented() {

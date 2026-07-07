@@ -1,23 +1,23 @@
-package kr.co.sscm.alpine.auth.dto;
+﻿package kr.co.sscm.alpine.auth.dto;
 
 public class AlpineLoginRequest {
 
-	private String empNo;
-	private String password;
+	private String userNo;
+	private String pw;
 
-	public String getEmpNo() {
-		return empNo;
+	public String getUserNo() {
+		return userNo;
 	}
 
-	public void setEmpNo(String empNo) {
-		this.empNo = empNo;
+	public void setUserNo(String userNo) {
+		this.userNo = userNo;
 	}
 
-	public String getPassword() {
-		return password;
+	public String getPw() {
+		return pw;
 	}
 
-	public void setPassword(String password) {
-		this.password = password;
+	public void setPw(String pw) {
+		this.pw = pw;
 	}
 }
