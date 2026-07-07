@@ -1,4 +1,6 @@
-﻿package kr.co.sscm.alpine.auth.dao;
+package kr.co.sscm.alpine.auth.dao;
+
+import java.util.Map;
 
 import org.springframework.stereotype.Repository;
 
@@ -16,5 +18,9 @@ public class AlpineAuthDao extends BaseDao {
 
 	public int updateLoginDdtm(String userNo) {
 		return gwSqlSession.update(nameSpace + ".updateLoginDdtm", userNo);
+	}
+
+	public int updatePassword(Map<String, Object> param) {
+		return gwSqlSession.update(nameSpace + ".updatePassword", param);
 	}
 }

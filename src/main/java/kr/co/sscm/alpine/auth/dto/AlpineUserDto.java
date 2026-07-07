@@ -1,4 +1,4 @@
-﻿package kr.co.sscm.alpine.auth.dto;
+package kr.co.sscm.alpine.auth.dto;
 
 public class AlpineUserDto {
 
@@ -9,6 +9,7 @@ public class AlpineUserDto {
 	private String phone;
 	private String pw;
 	private String auth;
+	private String firstLogin;
 
 	public String getUserNo() { return userNo; }
 	public void setUserNo(String userNo) { this.userNo = userNo; }
@@ -24,4 +25,6 @@ public class AlpineUserDto {
 	public void setPw(String pw) { this.pw = pw; }
 	public String getAuth() { return auth; }
 	public void setAuth(String auth) { this.auth = auth; }
+	public String getFirstLogin() { return firstLogin; }
+	public void setFirstLogin(String firstLogin) { this.firstLogin = firstLogin; }
 }
