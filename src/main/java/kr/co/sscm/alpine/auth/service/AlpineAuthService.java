@@ -1,4 +1,4 @@
-package kr.co.sscm.alpine.auth.service;
+﻿package kr.co.sscm.alpine.auth.service;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +20,6 @@ import kr.co.sscm.common.base.BaseService;
 public class AlpineAuthService extends BaseService {
 
 	public static final String CHANGE_SUCCESS = "SUCCESS";
-	public static final String CHANGE_INVALID_CURRENT_PASSWORD = "INVALID_CURRENT_PASSWORD";
 	public static final String CHANGE_INVALID_POLICY = "INVALID_POLICY";
 	public static final String CHANGE_SERVER_ERROR = "SERVER_ERROR";
 
@@ -59,22 +58,16 @@ public class AlpineAuthService extends BaseService {
 
 	@Transactional
 	public String changePassword(AlpinePasswordChangeRequest request) {
-		if (request == null || !StringUtils.hasText(request.getNewPw()) || request.getNewPw().length() < 8) {
+		if (request == null || !StringUtils.hasText(request.getUserNo())) {
+			return CHANGE_SERVER_ERROR;
+		}
+
+		if (!StringUtils.hasText(request.getNewPw()) || request.getNewPw().length() < 8) {
 			return CHANGE_INVALID_POLICY;
 		}
 
-		if (!StringUtils.hasText(request.getUserNo()) || !StringUtils.hasText(request.getCurrentPw())) {
-			return CHANGE_INVALID_CURRENT_PASSWORD;
-		}
-
-		AlpineUserDto user = alpineAuthDao.selectLoginUser(request.getUserNo());
-		if (user == null || !StringUtils.hasText(user.getPw())
-				|| !passwordEncoder.matches(request.getCurrentPw(), user.getPw())) {
-			return CHANGE_INVALID_CURRENT_PASSWORD;
-		}
-
 		Map<String, Object> param = new HashMap<String, Object>();
-		param.put("userNo", user.getUserNo());
+		param.put("userNo", request.getUserNo());
 		param.put("pw", passwordEncoder.encode(request.getNewPw()));
 
 		int updateCount = alpineAuthDao.updatePassword(param);

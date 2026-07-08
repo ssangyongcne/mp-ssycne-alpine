@@ -1,4 +1,4 @@
-package kr.co.sscm.alpine.auth.controller;
+﻿package kr.co.sscm.alpine.auth.controller;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +47,6 @@ public class AlpineAuthController extends BaseController {
 
 		AlpinePasswordChangeRequest request = new AlpinePasswordChangeRequest();
 		request.setUserNo(toString(bodyMap.get("userNo")));
-		request.setCurrentPw(toString(bodyMap.get("currentPw")));
 		request.setNewPw(toString(bodyMap.get("newPw")));
 
 		try {
@@ -58,9 +57,7 @@ public class AlpineAuthController extends BaseController {
 			if (AlpineAuthService.CHANGE_INVALID_POLICY.equals(result)) {
 				return new ResponseEntity<ApiResponse<Void>>(ApiResponse.<Void>fail("400", "\uBE44\uBC00\uBC88\uD638\uB294 \uCD5C\uC18C 8\uC790 \uC774\uC0C1 \uC785\uB825\uD574 \uC8FC\uC138\uC694."), HttpStatus.BAD_REQUEST);
 			}
-			if (AlpineAuthService.CHANGE_INVALID_CURRENT_PASSWORD.equals(result)) {
-				return new ResponseEntity<ApiResponse<Void>>(ApiResponse.<Void>fail("401", "\uD604\uC7AC \uBE44\uBC00\uBC88\uD638\uAC00 \uC77C\uCE58\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4."), HttpStatus.UNAUTHORIZED);
-			}
+
 			return new ResponseEntity<ApiResponse<Void>>(ApiResponse.<Void>fail("500", "\uC11C\uBC84 \uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4."), HttpStatus.INTERNAL_SERVER_ERROR);
 		} catch (Exception e) {
 			return new ResponseEntity<ApiResponse<Void>>(ApiResponse.<Void>fail("500", "\uC11C\uBC84 \uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4."), HttpStatus.INTERNAL_SERVER_ERROR);

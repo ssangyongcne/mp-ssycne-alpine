@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <legacy_sys>
         <checkLoopTime>10</checkLoopTime>
-        <!--쉼표 구분자로 넣는다 ex)http://211.241.199.215:18080/,http://211.241.199.215:18080/,http://127.0.0.1:8080/msp-gw/-->
         <host_list></host_list>
     </legacy_sys>
     <!-- <jdbc>
@@ -17,7 +16,6 @@
         <username>vTn+Iu2LqRJIl3f4EfbtBg==</username>
         <password>NFCBNYUzfNNrutkD4TpmDw==</password>
     </jdbc2> -->
-    <!--아래의 사용하시고자 하는 엘리먼트를 확장해서 사용하세요.-->
     <test>
         <id>TEST01</id>
     </test>
@@ -86,11 +84,12 @@
     <app>
     	<id>kr.co.ssycne.mobile</id>
     </app>
-    <!-- db 사용 여부 -->
     <db>
     	<use>false</use>
     </db>
     <login>
     	<length>17</length>
     </login>
+    <fitm_file_path>/FitmFiles</fitm_file_path>
 </configuration>
+
