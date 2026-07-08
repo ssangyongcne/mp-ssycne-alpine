@@ -1,0 +1,148 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ssyc.BoardDao">
+
+	<!-- 목록/건수 조회 공통 조건. 공지/후기는 TYPE 값으로 구분한다. -->
+	<sql id="boardListWhere">
+		FROM AP_BOARD b
+		WHERE b.USE_YN = 'Y'
+		<if test="boardType != null and boardType != ''">
+			AND b.TYPE = #{boardType}
+		</if>
+		<if test="year != null and year != ''">
+			AND SUBSTRING(b.POST_DT, 1, 4) = #{year}
+		</if>
+		<if test="keyword != null and keyword != ''">
+			AND (
+				b.TITLE LIKE CONCAT('%', #{keyword}, '%')
+				OR b.CONTENT LIKE CONCAT('%', #{keyword}, '%')
+			)
+		</if>
+	</sql>
+
+	<resultMap id="boardSummaryResultMap" type="kr.co.sscm.alpine.board.dto.BoardSummaryResponse">
+		<id property="boardNo" column="board_no" />
+		<result property="boardType" column="board_type" />
+		<result property="title" column="title" />
+		<result property="writer" column="writer" />
+		<result property="postDate" column="post_date" />
+	</resultMap>
+
+	<resultMap id="boardDetailResultMap" type="kr.co.sscm.alpine.board.dto.BoardDetailResponse">
+		<id property="boardNo" column="board_no" />
+		<result property="boardType" column="board_type" />
+		<result property="title" column="title" />
+		<result property="detail" column="detail" />
+		<result property="appendFileGroupUuid" column="append_file_group_uuid" />
+		<result property="postDate" column="post_date" />
+		<result property="writerEmpNo" column="writer_emp_no" />
+		<result property="writer" column="writer" />
+		<result property="viewCount" column="view_count" />
+	</resultMap>
+
+	<select id="selectBoardCount" parameterType="map" resultType="int">
+		/* BoardDao.selectBoardCount */
+		SELECT COUNT(1)
+		<include refid="boardListWhere" />
+	</select>
+
+	<select id="selectBoardList" parameterType="map" resultMap="boardSummaryResultMap">
+		/* BoardDao.selectBoardList */
+		SELECT
+			b.BOARD_NO AS board_no,
+			b.TYPE AS board_type,
+			b.TITLE AS title,
+			b.WRITER_EMPNO AS writer,
+			b.POST_DT AS post_date
+		<include refid="boardListWhere" />
+		ORDER BY b.POST_DT DESC, b.BOARD_NO DESC
+	</select>
+
+	<select id="selectBoardDetail" parameterType="long" resultMap="boardDetailResultMap">
+		/* BoardDao.selectBoardDetail */
+		SELECT
+			b.BOARD_NO AS board_no,
+			b.TYPE AS board_type,
+			b.TITLE AS title,
+			b.CONTENT AS detail,
+			b.APPND_FILE_GROP_UUID AS append_file_group_uuid,
+			b.POST_DT AS post_date,
+			b.WRITER_EMPNO AS writer_emp_no,
+			b.WRITER_EMPNO AS writer,
+			b.VIEW_CNT AS view_count
+		FROM AP_BOARD b
+		WHERE b.BOARD_NO = #{boardNo}
+		AND b.USE_YN = 'Y'
+	</select>
+
+	<update id="updateBoardViewCount" parameterType="long">
+		/* BoardDao.updateBoardViewCount */
+		UPDATE AP_BOARD
+		SET VIEW_CNT = VIEW_CNT + 1
+		WHERE BOARD_NO = #{boardNo}
+		AND USE_YN = 'Y'
+	</update>
+
+	<insert id="insertBoard" parameterType="kr.co.sscm.alpine.board.dto.BoardSaveRequest" useGeneratedKeys="true" keyProperty="boardNo">
+		/* BoardDao.insertBoard */
+		INSERT INTO AP_BOARD (
+			TYPE,
+			TITLE,
+			CONTENT,
+			APPND_FILE_GROP_UUID,
+			POST_DT,
+			WRITER_EMPNO,
+			USE_YN,
+			INP_DDTM,
+			INPR_EMPNO,
+			INPR_IP,
+			UPDT_DDTM,
+			UPDTR_EMPNO,
+			UPDTR_IP
+		) VALUES (
+			#{boardType},
+			#{title},
+			#{detail},
+			#{appendFileGroupUuid},
+			#{postDate},
+			#{writerEmpNo},
+			'Y',
+			DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'),
+			#{userNo},
+			#{clientIp},
+			DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'),
+			#{userNo},
+			#{clientIp}
+		)
+	</insert>
+
+	<update id="updateBoard" parameterType="kr.co.sscm.alpine.board.dto.BoardSaveRequest">
+		/* BoardDao.updateBoard */
+		UPDATE AP_BOARD
+		SET TYPE = #{boardType},
+			TITLE = #{title},
+			CONTENT = #{detail},
+			APPND_FILE_GROP_UUID = #{appendFileGroupUuid},
+			POST_DT = #{postDate},
+			WRITER_EMPNO = #{writerEmpNo},
+			UPDT_DDTM = DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'),
+			UPDTR_EMPNO = #{userNo},
+			UPDTR_IP = #{clientIp}
+		WHERE BOARD_NO = #{boardNo}
+		AND USE_YN = 'Y'
+	</update>
+
+	<!-- row는 지우지 않고 USE_YN만 N으로 바꾼다. -->
+	<update id="deleteBoard" parameterType="kr.co.sscm.alpine.board.dto.BoardSaveRequest">
+		/* BoardDao.deleteBoard */
+		UPDATE AP_BOARD
+		SET USE_YN = 'N',
+			UPDT_DDTM = DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'),
+			UPDTR_EMPNO = #{userNo},
+			UPDTR_IP = #{clientIp}
+		WHERE BOARD_NO = #{boardNo}
+		AND USE_YN = 'Y'
+	</update>
+
+</mapper>
