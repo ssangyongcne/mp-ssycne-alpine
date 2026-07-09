@@ -3,6 +3,8 @@
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +29,7 @@ public class AlpineAuthController extends BaseController {
 	private AlpineAuthService alpineAuthService;
 
 	@PostMapping(value = "/login", produces = "application/json; charset=utf8")
-	public @ResponseBody ResponseEntity<ApiResponse<AlpineLoginResponse>> login(@RequestBody Map<String, Object> requestMap) {
+	public @ResponseBody ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, Object> requestMap, HttpServletRequest httpRequest) {
 		Map<String, Object> bodyMap = getBodyMap(requestMap);
 
 		AlpineLoginRequest request = new AlpineLoginRequest();
@@ -36,9 +38,9 @@ public class AlpineAuthController extends BaseController {
 
 		AlpineLoginResponse response = alpineAuthService.login(request);
 		if (response == null) {
-			return new ResponseEntity<ApiResponse<AlpineLoginResponse>>(ApiResponse.<AlpineLoginResponse>fail("401", "INVALID_LOGIN"), HttpStatus.UNAUTHORIZED);
+			return new ResponseEntity<Map<String, Object>>(createMspResponse(requestMap, httpRequest, "401", "INVALID_LOGIN", null), HttpStatus.UNAUTHORIZED);
 		}
-		return new ResponseEntity<ApiResponse<AlpineLoginResponse>>(new ApiResponse<AlpineLoginResponse>("200", "success", response), HttpStatus.OK);
+		return new ResponseEntity<Map<String, Object>>(createMspResponse(requestMap, httpRequest, "200", "success", response), HttpStatus.OK);
 	}
 
 	@PostMapping(value = "/password/change", produces = "application/json; charset=utf8")
@@ -55,13 +57,47 @@ public class AlpineAuthController extends BaseController {
 				return new ResponseEntity<ApiResponse<Void>>(new ApiResponse<Void>("200", "success", null), HttpStatus.OK);
 			}
 			if (AlpineAuthService.CHANGE_INVALID_POLICY.equals(result)) {
-				return new ResponseEntity<ApiResponse<Void>>(ApiResponse.<Void>fail("400", "\uBE44\uBC00\uBC88\uD638\uB294 \uCD5C\uC18C 8\uC790 \uC774\uC0C1 \uC785\uB825\uD574 \uC8FC\uC138\uC694."), HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<ApiResponse<Void>>(ApiResponse.<Void>fail("400", "비밀번호는 최소 8자 이상 입력해 주세요."), HttpStatus.BAD_REQUEST);
 			}
 
-			return new ResponseEntity<ApiResponse<Void>>(ApiResponse.<Void>fail("500", "\uC11C\uBC84 \uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4."), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<ApiResponse<Void>>(ApiResponse.<Void>fail("500", "서버 오류가 발생했습니다."), HttpStatus.INTERNAL_SERVER_ERROR);
 		} catch (Exception e) {
-			return new ResponseEntity<ApiResponse<Void>>(ApiResponse.<Void>fail("500", "\uC11C\uBC84 \uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4."), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<ApiResponse<Void>>(ApiResponse.<Void>fail("500", "서버 오류가 발생했습니다."), HttpStatus.INTERNAL_SERVER_ERROR);
 		}
+	}
+
+	private Map<String, Object> createMspResponse(Map<String, Object> requestMap, HttpServletRequest httpRequest, String resultCode, String resultMsg, Object result) {
+		Map<String, Object> responseMap = new HashMap<String, Object>();
+		Map<String, Object> headMap = new HashMap<String, Object>();
+		Map<String, Object> bodyMap = new HashMap<String, Object>();
+
+		headMap.put("result_code", resultCode);
+		headMap.put("result_msg", resultMsg);
+		headMap.put("screen_id", getScreenId(requestMap, httpRequest));
+
+		bodyMap.put("resultCode", resultCode);
+		bodyMap.put("resultMsg", resultMsg);
+		bodyMap.put("result", result);
+
+		responseMap.put("head", headMap);
+		responseMap.put("body", bodyMap);
+		return responseMap;
+	}
+
+	@SuppressWarnings("unchecked")
+	private String getScreenId(Map<String, Object> requestMap, HttpServletRequest httpRequest) {
+		if (requestMap != null) {
+			Object head = requestMap.get("head");
+			if (head instanceof Map) {
+				Object screenId = ((Map<String, Object>) head).get("screen_id");
+				if (screenId != null) {
+					return String.valueOf(screenId);
+				}
+			}
+		}
+
+		String screenId = httpRequest.getHeader("screen_id");
+		return screenId == null ? "" : screenId;
 	}
 
 	@SuppressWarnings("unchecked")
