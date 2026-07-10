@@ -1,9 +1,9 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="ssyc.BoardDao">
 
-	<!-- 목록/건수 조회 공통 조건. 공지/후기는 TYPE 값으로 구분한다. -->
+	<!-- Common filter for board list and count. TYPE separates notice/review. -->
 	<sql id="boardListWhere">
 		FROM AP_BOARD b
 		WHERE b.USE_YN = 'Y'
@@ -27,6 +27,9 @@
 		<result property="title" column="title" />
 		<result property="writer" column="writer" />
 		<result property="postDate" column="post_date" />
+		<result property="writerNm" column="writer_nm" />
+		<result property="regDate" column="reg_date" />
+		<result property="viewCnt" column="view_cnt" />
 	</resultMap>
 
 	<resultMap id="boardDetailResultMap" type="kr.co.sscm.alpine.board.dto.BoardDetailResponse">
@@ -54,7 +57,10 @@
 			b.TYPE AS board_type,
 			b.TITLE AS title,
 			b.WRITER_EMPNO AS writer,
-			b.POST_DT AS post_date
+			b.POST_DT AS post_date,
+			b.WRITER_EMPNO AS writer_nm,
+			b.POST_DT AS reg_date,
+			b.VIEW_CNT AS view_cnt
 		<include refid="boardListWhere" />
 		ORDER BY b.POST_DT DESC, b.BOARD_NO DESC
 	</select>
@@ -117,6 +123,61 @@
 		)
 	</insert>
 
+
+	<insert id="insertAppndFile" parameterType="kr.co.sscm.alpine.board.dto.BoardAppndFileRequest">
+		<selectKey keyProperty="srtOrd" resultType="int" order="BEFORE">
+			/* BoardDao.insertAppndFile.selectSrtOrd */
+			SELECT IFNULL(MAX(SRT_ORD), 0) + 1
+			FROM ap_appnd_file_mgmt
+			WHERE APPND_FILE_GROP_UUID = #{appndFileGropUuid}
+		</selectKey>
+		/* BoardDao.insertAppndFile */
+		INSERT INTO ap_appnd_file_mgmt (
+			APPND_FILE_UUID,
+			APPND_FILE_BASS_CNTS,
+			APPND_FILE_GROP_UUID,
+			APPND_FILE_PATH_CNTS,
+			APPND_FILE_ORIG_NM,
+			APPND_FILE_TRANSMS_NM,
+			APPND_FILE_FLEXT_NM,
+			APPND_FILE_MIME_CNTS,
+			APPND_FILE_SIZ,
+			APPND_FILE_PARM_NM,
+			APPND_FILE_TMP_YN,
+			APPND_FILE_DEL_YN,
+			APPND_FILE_DRM_YN,
+			SRT_ORD,
+			DWNLD_COUNT,
+			INP_DDTM,
+			INPR_EMPNO,
+			INPR_IP,
+			UPDT_DDTM,
+			UPDTR_EMPNO,
+			UPDTR_IP
+		) VALUES (
+			#{appndFileUuid},
+			#{appndFileBassCnts},
+			#{appndFileGropUuid},
+			#{appndFilePathCnts},
+			#{appndFileOrigNm},
+			#{appndFileTransmsNm},
+			#{appndFileFlextNm},
+			#{appndFileMimeCnts},
+			#{appndFileSiz},
+			#{appndFileParmNm},
+			'N',
+			'N',
+			'N',
+			#{srtOrd},
+			0,
+			DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'),
+			#{userNo},
+			#{clientIp},
+			DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'),
+			#{userNo},
+			#{clientIp}
+		)
+	</insert>
 	<update id="updateBoard" parameterType="kr.co.sscm.alpine.board.dto.BoardSaveRequest">
 		/* BoardDao.updateBoard */
 		UPDATE AP_BOARD
@@ -133,7 +194,7 @@
 		AND USE_YN = 'Y'
 	</update>
 
-	<!-- row는 지우지 않고 USE_YN만 N으로 바꾼다. -->
+	<!-- Soft delete: keep the row and set USE_YN to N. -->
 	<update id="deleteBoard" parameterType="kr.co.sscm.alpine.board.dto.BoardSaveRequest">
 		/* BoardDao.deleteBoard */
 		UPDATE AP_BOARD
