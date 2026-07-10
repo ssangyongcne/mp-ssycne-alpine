@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <legacy_sys>
         <checkLoopTime>10</checkLoopTime>
-        <!--쉼표 구분자로 넣는다 ex)http://211.241.199.215:18080/,http://211.241.199.215:18080/,http://127.0.0.1:8080/msp-gw/-->
+
         <host_list></host_list>
     </legacy_sys>
     <!-- <jdbc>
@@ -17,7 +17,7 @@
         <username>vTn+Iu2LqRJIl3f4EfbtBg==</username>
         <password>NFCBNYUzfNNrutkD4TpmDw==</password>
     </jdbc2> -->
-    <!--아래의 사용하시고자 하는 엘리먼트를 확장해서 사용하세요.-->
+
     <test>
         <id>TEST01</id>
     </test>
@@ -45,8 +45,8 @@
     </push>
     <eai>
         <endpoint>
-            <base>http://150.2.150.129:7001/SIS_EAI_Process/com/sis/eai/flowcontrol/mobile/</base>	<!-- 개발 -->
-			<mobileLoginProcess>SSYCNE_JMA_01.JMA_028.ws:JMA_028_P</mobileLoginProcess>
+            <base>http://150.2.150.129:7001/SIS_EAI_Process/com/sis/eai/flowcontrol/mobile/</base>
+			<mobileLoginProcess>JMA101Process.jpd?WSDL</mobileLoginProcess>
             <bgtCMPRProcess>SSYCNE_JMA_01.JMA_002.ws:JMA_002_P</bgtCMPRProcess>
             <bgtCMPRYearProcess>SSYCNE_JMA_01.JMA_003.ws:JMA_003_P</bgtCMPRYearProcess>
             <fldSiteQTYProcess>SSYCNE_JMA_01.JMA_006.ws:JMA_006_P</fldSiteQTYProcess>
@@ -93,4 +93,7 @@
     <login>
     	<length>17</length>
     </login>
+    <fitm_file_path>/FitmFiles</fitm_file_path>
 </configuration>
+
+

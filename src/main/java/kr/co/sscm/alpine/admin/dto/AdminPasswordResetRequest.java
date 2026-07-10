@@ -1,6 +1,6 @@
-package kr.co.sscm.alpine.admin.dto;
+﻿package kr.co.sscm.alpine.admin.dto;
 
-public class AlpinePasswordResetRequest {
+public class AdminPasswordResetRequest {
 
 	private String targetEmpNo;
 	private String adminEmpNo;
@@ -10,3 +10,4 @@ public class AlpinePasswordResetRequest {
 	public String getAdminEmpNo() { return adminEmpNo; }
 	public void setAdminEmpNo(String adminEmpNo) { this.adminEmpNo = adminEmpNo; }
 }
+

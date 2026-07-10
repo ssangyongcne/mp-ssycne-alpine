@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ssyc.BoardDao">
+
+	<!-- Common filter for board list and count. TYPE separates notice/review. -->
+	<sql id="boardListWhere">
+		FROM AP_BOARD b
+		WHERE b.USE_YN = 'Y'
+		<if test="boardType != null and boardType != ''">
+			AND b.TYPE = #{boardType}
+		</if>
+		<if test="year != null and year != ''">
+			AND SUBSTRING(b.POST_DT, 1, 4) = #{year}
+		</if>
+		<if test="keyword != null and keyword != ''">
+			AND (
+				b.TITLE LIKE CONCAT('%', #{keyword}, '%')
+				OR b.CONTENT LIKE CONCAT('%', #{keyword}, '%')
+			)
+		</if>
+	</sql>
+
+	<resultMap id="boardSummaryResultMap" type="kr.co.sscm.alpine.board.dto.BoardSummaryResponse">
+		<id property="boardNo" column="board_no" />
+		<result property="boardType" column="board_type" />
+		<result property="title" column="title" />
+		<result property="writer" column="writer" />
+		<result property="postDate" column="post_date" />
+		<result property="writerNm" column="writer_nm" />
+		<result property="regDate" column="reg_date" />
+		<result property="viewCnt" column="view_cnt" />
+	</resultMap>
+
+	<resultMap id="boardDetailResultMap" type="kr.co.sscm.alpine.board.dto.BoardDetailResponse">
+		<id property="boardNo" column="board_no" />
+		<result property="boardType" column="board_type" />
+		<result property="title" column="title" />
+		<result property="detail" column="detail" />
+		<result property="appendFileGroupUuid" column="append_file_group_uuid" />
+		<result property="postDate" column="post_date" />
+		<result property="writerEmpNo" column="writer_emp_no" />
+		<result property="writer" column="writer" />
+		<result property="viewCount" column="view_count" />
+	</resultMap>
+
+	<select id="selectBoardCount" parameterType="map" resultType="int">
+		/* BoardDao.selectBoardCount */
+		SELECT COUNT(1)
+		<include refid="boardListWhere" />
+	</select>
+
+	<select id="selectBoardList" parameterType="map" resultMap="boardSummaryResultMap">
+		/* BoardDao.selectBoardList */
+		SELECT
+			b.BOARD_NO AS board_no,
+			b.TYPE AS board_type,
+			b.TITLE AS title,
+			b.WRITER_EMPNO AS writer,
+			b.POST_DT AS post_date,
+			b.WRITER_EMPNO AS writer_nm,
+			b.POST_DT AS reg_date,
+			b.VIEW_CNT AS view_cnt
+		<include refid="boardListWhere" />
+		ORDER BY b.POST_DT DESC, b.BOARD_NO DESC
+	</select>
+
+	<select id="selectBoardDetail" parameterType="long" resultMap="boardDetailResultMap">
+		/* BoardDao.selectBoardDetail */
+		SELECT
+			b.BOARD_NO AS board_no,
+			b.TYPE AS board_type,
+			b.TITLE AS title,
+			b.CONTENT AS detail,
+			b.APPND_FILE_GROP_UUID AS append_file_group_uuid,
+			b.POST_DT AS post_date,
+			b.WRITER_EMPNO AS writer_emp_no,
+			b.WRITER_EMPNO AS writer,
+			b.VIEW_CNT AS view_count
+		FROM AP_BOARD b
+		WHERE b.BOARD_NO = #{boardNo}
+		AND b.USE_YN = 'Y'
+	</select>
+
+	<update id="updateBoardViewCount" parameterType="long">
+		/* BoardDao.updateBoardViewCount */
+		UPDATE AP_BOARD
+		SET VIEW_CNT = VIEW_CNT + 1
+		WHERE BOARD_NO = #{boardNo}
+		AND USE_YN = 'Y'
+	</update>
+
+	<insert id="insertBoard" parameterType="kr.co.sscm.alpine.board.dto.BoardSaveRequest" useGeneratedKeys="true" keyProperty="boardNo">
+		/* BoardDao.insertBoard */
+		INSERT INTO AP_BOARD (
+			TYPE,
+			TITLE,
+			CONTENT,
+			APPND_FILE_GROP_UUID,
+			POST_DT,
+			WRITER_EMPNO,
+			USE_YN,
+			INP_DDTM,
+			INPR_EMPNO,
+			INPR_IP,
+			UPDT_DDTM,
+			UPDTR_EMPNO,
+			UPDTR_IP
+		) VALUES (
+			#{boardType},
+			#{title},
+			#{detail},
+			#{appendFileGroupUuid},
+			#{postDate},
+			#{writerEmpNo},
+			'Y',
+			DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'),
+			#{userNo},
+			#{clientIp},
+			DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'),
+			#{userNo},
+			#{clientIp}
+		)
+	</insert>
+
+
+	<insert id="insertAppndFile" parameterType="kr.co.sscm.alpine.board.dto.BoardAppndFileRequest">
+		<selectKey keyProperty="srtOrd" resultType="int" order="BEFORE">
+			/* BoardDao.insertAppndFile.selectSrtOrd */
+			SELECT IFNULL(MAX(SRT_ORD), 0) + 1
+			FROM ap_appnd_file_mgmt
+			WHERE APPND_FILE_GROP_UUID = #{appndFileGropUuid}
+		</selectKey>
+		/* BoardDao.insertAppndFile */
+		INSERT INTO ap_appnd_file_mgmt (
+			APPND_FILE_UUID,
+			APPND_FILE_BASS_CNTS,
+			APPND_FILE_GROP_UUID,
+			APPND_FILE_PATH_CNTS,
+			APPND_FILE_ORIG_NM,
+			APPND_FILE_TRANSMS_NM,
+			APPND_FILE_FLEXT_NM,
+			APPND_FILE_MIME_CNTS,
+			APPND_FILE_SIZ,
+			APPND_FILE_PARM_NM,
+			APPND_FILE_TMP_YN,
+			APPND_FILE_DEL_YN,
+			APPND_FILE_DRM_YN,
+			SRT_ORD,
+			DWNLD_COUNT,
+			INP_DDTM,
+			INPR_EMPNO,
+			INPR_IP,
+			UPDT_DDTM,
+			UPDTR_EMPNO,
+			UPDTR_IP
+		) VALUES (
+			#{appndFileUuid},
+			#{appndFileBassCnts},
+			#{appndFileGropUuid},
+			#{appndFilePathCnts},
+			#{appndFileOrigNm},
+			#{appndFileTransmsNm},
+			#{appndFileFlextNm},
+			#{appndFileMimeCnts},
+			#{appndFileSiz},
+			#{appndFileParmNm},
+			'N',
+			'N',
+			'N',
+			#{srtOrd},
+			0,
+			DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'),
+			#{userNo},
+			#{clientIp},
+			DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'),
+			#{userNo},
+			#{clientIp}
+		)
+	</insert>
+	<update id="updateBoard" parameterType="kr.co.sscm.alpine.board.dto.BoardSaveRequest">
+		/* BoardDao.updateBoard */
+		UPDATE AP_BOARD
+		SET TYPE = #{boardType},
+			TITLE = #{title},
+			CONTENT = #{detail},
+			APPND_FILE_GROP_UUID = #{appendFileGroupUuid},
+			POST_DT = #{postDate},
+			WRITER_EMPNO = #{writerEmpNo},
+			UPDT_DDTM = DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'),
+			UPDTR_EMPNO = #{userNo},
+			UPDTR_IP = #{clientIp}
+		WHERE BOARD_NO = #{boardNo}
+		AND USE_YN = 'Y'
+	</update>
+
+	<!-- Soft delete: keep the row and set USE_YN to N. -->
+	<update id="deleteBoard" parameterType="kr.co.sscm.alpine.board.dto.BoardSaveRequest">
+		/* BoardDao.deleteBoard */
+		UPDATE AP_BOARD
+		SET USE_YN = 'N',
+			UPDT_DDTM = DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'),
+			UPDTR_EMPNO = #{userNo},
+			UPDTR_IP = #{clientIp}
+		WHERE BOARD_NO = #{boardNo}
+		AND USE_YN = 'Y'
+	</update>
+
+</mapper>

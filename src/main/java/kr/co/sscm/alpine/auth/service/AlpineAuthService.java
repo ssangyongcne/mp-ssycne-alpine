@@ -1,30 +1,77 @@
-package kr.co.sscm.alpine.auth.service;
+﻿package kr.co.sscm.alpine.auth.service;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import kr.co.sscm.alpine.auth.dao.AlpineAuthDao;
 import kr.co.sscm.alpine.auth.dto.AlpineLoginRequest;
 import kr.co.sscm.alpine.auth.dto.AlpineLoginResponse;
+import kr.co.sscm.alpine.auth.dto.AlpinePasswordChangeRequest;
+import kr.co.sscm.alpine.auth.dto.AlpineUserDto;
 import kr.co.sscm.common.base.BaseService;
 
 @Service
 public class AlpineAuthService extends BaseService {
 
-	private static final String TEST_EMP_NO = "2232021";
+	public static final String CHANGE_SUCCESS = "SUCCESS";
+	public static final String CHANGE_INVALID_POLICY = "INVALID_POLICY";
+	public static final String CHANGE_SERVER_ERROR = "SERVER_ERROR";
+
+	@Autowired
+	private AlpineAuthDao alpineAuthDao;
+
+	@Autowired
+	private PasswordEncoder passwordEncoder;
 
 	public AlpineLoginResponse login(AlpineLoginRequest request) {
-		// TODO: Replace this temporary member lookup with DB-backed authentication.
-		if (request == null || !TEST_EMP_NO.equals(request.getEmpNo())) {
+		if (request == null || !StringUtils.hasText(request.getUserNo()) || !StringUtils.hasText(request.getPw())) {
 			return null;
 		}
 
-		// TODO: Add password verification when the authentication policy is finalized.
+		AlpineUserDto user = alpineAuthDao.selectLoginUser(request.getUserNo());
+		if (user == null || !StringUtils.hasText(user.getPw())) {
+			return null;
+		}
+
+		if (!passwordEncoder.matches(request.getPw(), user.getPw())) {
+			return null;
+		}
+
+		alpineAuthDao.updateLoginDdtm(user.getUserNo());
+
 		AlpineLoginResponse response = new AlpineLoginResponse();
-		response.setEMPNO(TEST_EMP_NO);
-		response.setUZR_NM("강민규");
-		response.setDEPT_NM("IT혁신팀");
-		response.setDUTY_NM("사원");
-		response.setPHONE("010-1234-5678");
-		response.setADMIN_YN("N");
+		response.setUserNo(user.getUserNo());
+		response.setUserNm(user.getUserNm());
+		response.setDeptNm(user.getDeptNm());
+		response.setDutyNm(user.getDutyNm());
+		response.setPhone(user.getPhone());
+		response.setAuth(user.getAuth());
+		response.setFirstLogin(StringUtils.hasText(user.getFirstLogin()) ? user.getFirstLogin() : "N");
 		return response;
 	}
+
+	@Transactional
+	public String changePassword(AlpinePasswordChangeRequest request) {
+		if (request == null || !StringUtils.hasText(request.getUserNo())) {
+			return CHANGE_SERVER_ERROR;
+		}
+
+		if (!StringUtils.hasText(request.getNewPw()) || request.getNewPw().length() < 8) {
+			return CHANGE_INVALID_POLICY;
+		}
+
+		Map<String, Object> param = new HashMap<String, Object>();
+		param.put("userNo", request.getUserNo());
+		param.put("pw", passwordEncoder.encode(request.getNewPw()));
+
+		int updateCount = alpineAuthDao.updatePassword(param);
+		return updateCount > 0 ? CHANGE_SUCCESS : CHANGE_SERVER_ERROR;
+	}
+
 }

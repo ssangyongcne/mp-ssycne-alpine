@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <beans:beans
         xmlns:beans="http://www.springframework.org/schema/beans"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -31,10 +31,10 @@
 
     <!-- TODO: Replace this development CORS policy with the production mobile app origin policy. -->
     <mvc:cors>
-        <mvc:mapping path="/api/alpine/**" allowed-origins="*" allowed-methods="GET,POST,PUT,DELETE,OPTIONS" allowed-headers="*" />
+        <mvc:mapping path="/api/alpine/**" allowed-origins="*" allowed-methods="GET,POST,OPTIONS" allowed-headers="*" />
     </mvc:cors>
 
-    <!--제우스일 경우 주석 해제 하고 다음줄 주석 처리-->
+    <!--?쒖슦?ㅼ씪 寃쎌슦 二쇱꽍 ?댁젣 ?섍퀬 ?ㅼ쓬以?二쇱꽍 泥섎━-->
     <!--<mvc:default-servlet-handler default-servlet-name="WorkerServlet"/>-->
 	<mvc:default-servlet-handler/>
 
@@ -47,7 +47,7 @@
     </beans:bean>
 
 <!--
-	spring 5.0 업그레이드로 인해 제거
+	spring 5.0 ?낃렇?덉씠?쒕줈 ?명빐 ?쒓굅
     <beans:bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
         <beans:property name="messageConverters">
             <beans:list>
@@ -96,3 +96,4 @@
     <!-- Event Batch END -->
 
 </beans:beans>
+
