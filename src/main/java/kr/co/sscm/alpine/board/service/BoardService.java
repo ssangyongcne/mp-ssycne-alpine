@@ -1,6 +1,7 @@
 package kr.co.sscm.alpine.board.service;
 
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -43,7 +44,16 @@ public class BoardService extends BaseService {
 	@Transactional(transactionManager = "transactionManager1")
 	public BoardDetailResponse getBoardDetail(Long boardNo) {
 		boardDao.updateBoardViewCount(boardNo);
-		return boardDao.selectBoardDetail(boardNo);
+		BoardDetailResponse response = boardDao.selectBoardDetail(boardNo);
+		if (response == null) {
+			return null;
+		}
+		if (StringUtils.hasText(response.getAppendFileGroupUuid())) {
+			response.setAppendFiles(boardDao.selectAppndFileList(response.getAppendFileGroupUuid()));
+		} else {
+			response.setAppendFiles(Collections.emptyList());
+		}
+		return response;
 	}
 
 	/** Insert a board row without uploaded files. */
@@ -110,7 +120,7 @@ public class BoardService extends BaseService {
 			appndFile.setAppndFileFlextNm(toStringValue(fileInfo.get("FILE_EXT")));
 			appndFile.setAppndFileMimeCnts(toStringValue(fileInfo.get("MIME_TYPE")));
 			appndFile.setAppndFileSiz(toIntegerValue(fileInfo.get("FILE_SIZE")));
-			appndFile.setAppndFileParmNm(entry.getKey());
+			appndFile.setAppndFileParmNm(defaultString(toStringValue(fileInfo.get("FILE_PARM_NM")), entry.getKey()));
 			appndFile.setUserNo(request.getUserNo());
 			appndFile.setClientIp(request.getClientIp());
 			boardDao.insertAppndFile(appndFile);

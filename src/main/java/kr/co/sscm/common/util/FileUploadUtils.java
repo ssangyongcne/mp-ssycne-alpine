@@ -1,13 +1,12 @@
-﻿package kr.co.sscm.common.util;
+package kr.co.sscm.common.util;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
@@ -16,6 +15,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
@@ -37,17 +37,17 @@ public class FileUploadUtils {
 
 	public static String fitm_file_path;
 
-	@Value("${push.upload.absolute_path}")
+	@Value("${push.upload.absolute_path:}")
 	public void setAbsolutePath(String path) {
 		absolute_path = path;
 	}
 
-	@Value("${push.upload.path}")
+	@Value("${push.upload.path:}")
 	public void setUploadDir(String dir) {
 		upload_path = dir;
 	}
 
-	@Value("${push.upload.dir}")
+	@Value("${push.upload.dir:}")
 	public void setPushImgDirNm(String dir) {
 		push_dir = dir;
 	}
@@ -125,64 +125,71 @@ public class FileUploadUtils {
 		}
 
 		MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
-		Map<String, MultipartFile> fileMap = multipartRequest.getFileMap();
-		Set<String> fileKeySet = fileMap.keySet();
-		Iterator<String> iterator = fileKeySet.iterator();
+		MultiValueMap<String, MultipartFile> fileMap = multipartRequest.getMultiFileMap();
+		int fileIndex = 0;
 
-		while (iterator.hasNext()) {
-			String fileKey = iterator.next();
-			MultipartFile file = fileMap.get(fileKey);
+		for (Map.Entry<String, List<MultipartFile>> entry : fileMap.entrySet()) {
+			String fileKey = entry.getKey();
+			List<MultipartFile> files = entry.getValue();
 
-			if (file == null || file.isEmpty()) {
+			if (files == null || files.isEmpty()) {
 				continue;
 			}
 
-			String originalFileName = file.getOriginalFilename();
-			if (originalFileName == null || originalFileName.trim().length() == 0) {
-				continue;
+			for (MultipartFile file : files) {
+				if (file == null || file.isEmpty()) {
+					continue;
+				}
+
+				String originalFileName = file.getOriginalFilename();
+				if (originalFileName == null || originalFileName.trim().length() == 0) {
+					continue;
+				}
+
+				int extensionIndex = originalFileName.lastIndexOf(".");
+				if (extensionIndex == -1 || extensionIndex == originalFileName.length() - 1) {
+					throw new ApiException("Invalid file extension.");
+				}
+
+				String fileExt = originalFileName.substring(extensionIndex + 1).toLowerCase();
+				if (!isAllowedFitmFileExtension(fileExt)) {
+					throw new ApiException("Only image files can be uploaded.");
+				}
+
+				String fileUuid = UUID.randomUUID().toString();
+				String fileGrpUuid = UUID.randomUUID().toString();
+				String fileNmUuid = UUID.randomUUID().toString();
+
+				Calendar calendar = Calendar.getInstance();
+				String year = String.valueOf(calendar.get(Calendar.YEAR));
+				String month = String.format("%02d", calendar.get(Calendar.MONTH) + 1);
+				String day = String.format("%02d", calendar.get(Calendar.DAY_OF_MONTH));
+				String filePos = year + "/" + month + "/" + day + "/";
+
+				File uploadDir = new File(fitm_file_path + File.separator + year + File.separator + month + File.separator + day);
+
+				try {
+					FileUtils.forceMkdir(uploadDir);
+					file.transferTo(new File(uploadDir, fileNmUuid));
+				} catch (IOException e) {
+					throw new ApiException("File upload failed.", e);
+				}
+
+				Map<String, Object> fileInfo = new HashMap<String, Object>();
+				fileInfo.put("FILE_UUID", fileUuid);
+				fileInfo.put("FILE_GRP_UUID", fileGrpUuid);
+				fileInfo.put("FILE_NM_UUID", fileNmUuid);
+				fileInfo.put("FILE_SIZE", Long.valueOf(file.getSize()).intValue());
+				fileInfo.put("FILE_ORIGI_NM", originalFileName);
+				fileInfo.put("FILE_NM", originalFileName.substring(0, extensionIndex));
+				fileInfo.put("FILE_EXT", fileExt);
+				fileInfo.put("FILE_POS", filePos);
+				fileInfo.put("MIME_TYPE", file.getContentType());
+				fileInfo.put("FILE_PARM_NM", fileKey);
+
+				resultMap.put(fileKey + "_" + fileIndex, fileInfo);
+				fileIndex++;
 			}
-
-			int extensionIndex = originalFileName.lastIndexOf(".");
-			if (extensionIndex == -1 || extensionIndex == originalFileName.length() - 1) {
-				throw new ApiException("Invalid file extension.");
-			}
-
-			String fileExt = originalFileName.substring(extensionIndex + 1).toLowerCase();
-			if (!isAllowedFitmFileExtension(fileExt)) {
-				throw new ApiException("Only image files can be uploaded.");
-			}
-
-			String fileUuid = UUID.randomUUID().toString();
-			String fileGrpUuid = UUID.randomUUID().toString();
-			String fileNmUuid = UUID.randomUUID().toString();
-
-			Calendar calendar = Calendar.getInstance();
-			String year = String.valueOf(calendar.get(Calendar.YEAR));
-			String month = String.format("%02d", calendar.get(Calendar.MONTH) + 1);
-			String day = String.format("%02d", calendar.get(Calendar.DAY_OF_MONTH));
-			String filePos = year + "/" + month + "/" + day + "/";
-
-			File uploadDir = new File(fitm_file_path + File.separator + year + File.separator + month + File.separator + day);
-
-			try {
-				FileUtils.forceMkdir(uploadDir);
-				file.transferTo(new File(uploadDir, fileNmUuid));
-			} catch (IOException e) {
-				throw new ApiException("File upload failed.", e);
-			}
-
-			Map<String, Object> fileInfo = new HashMap<String, Object>();
-			fileInfo.put("FILE_UUID", fileUuid);
-			fileInfo.put("FILE_GRP_UUID", fileGrpUuid);
-			fileInfo.put("FILE_NM_UUID", fileNmUuid);
-			fileInfo.put("FILE_SIZE", Long.valueOf(file.getSize()).intValue());
-			fileInfo.put("FILE_ORIGI_NM", originalFileName);
-			fileInfo.put("FILE_NM", originalFileName.substring(0, extensionIndex));
-			fileInfo.put("FILE_EXT", fileExt);
-			fileInfo.put("FILE_POS", filePos);
-			fileInfo.put("MIME_TYPE", file.getContentType());
-
-			resultMap.put(fileKey, fileInfo);
 		}
 
 		return resultMap;

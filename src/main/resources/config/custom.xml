@@ -26,32 +26,92 @@
         <aaa>1111</aaa>
     </test>
     <push>
-
+    
+       <!-- push was2 url -->
+    	<!-- <url>http://150.2.160.85:82/</url> -->
+    	<!-- push web2 url -->
+    	<url>http://150.2.160.83:82/</url>
+	    <upload>
+	        <absolute_path>/upload/morpheus/uploadfiles/push</absolute_path>
+	        <path>uploadfiles</path>
+	        <dir>push</dir>
+	    </upload>
     </push>
     <eai>
         <endpoint>
             <base>http://221.149.230.210:7001/SIS_EAI_Process/com/sis/eai/flowcontrol/mobile/</base>
-			<mobileLoginProcess>JMA101Process.jpd</mobileLoginProcess>
-            <bgtCMPRProcess>JMA104Process.jpd</bgtCMPRProcess>
-            <bgtCMPRYearProcess>JMA105Process.jpd</bgtCMPRYearProcess>
-            <fldSiteQTYProcess>JMA108Process.jpd</fldSiteQTYProcess>
-            <fldSiteQTYDTLProcess>JMA111Process.jpd</fldSiteQTYDTLProcess>
-            <fwrdREQProcess>JMA121Process.jpd</fwrdREQProcess>
-            <fwrdREQDTLProcess>JMA122Process.jpd</fwrdREQDTLProcess>
-            <fwrdREQEXCUTEProcess>JMA123Process.jpd</fwrdREQEXCUTEProcess>
-			<fwrdSTOCKALLProcess>JMA124Process.jpd</fwrdSTOCKALLProcess>
-			<fwrdSTOCK1Process>JMA125Process.jpd</fwrdSTOCK1Process>
-			<fwrdSTOCK2Process>JMA126Process.jpd</fwrdSTOCK2Process>
-			<fwrdTIMEProcess>JMA127Process.jpd</fwrdTIMEProcess>
-			<hmatSTOCKProcess>JMA128Process.jpd</hmatSTOCKProcess>
-      		<authProcess>JMA129Process.jpd</authProcess>
-      		<commonCode>JMA130Process.jpd</commonCode>
-      		<rcptListProcess>JMA131Process.jpd</rcptListProcess>
-      		<rcptListDtlProcess>JMA132Process.jpd</rcptListDtlProcess>
-      		<rcptListEXCUTElProcess>JMA133Process.jpd</rcptListEXCUTElProcess>
-      		<noteNoListProcess>JMA134Process.jpd</noteNoListProcess>
-      		<rcptAcctListProcess>JMA135Process.jpd</rcptAcctListProcess>
-      		<vrtlAcctNoListProcess>JMA136Process.jpd</vrtlAcctNoListProcess>
+
+                        <mobileLoginProcess>SSYCNE_JMA_01.JMA_028.ws:JMA_028_P</mobileLoginProcess>
+            <bgtCMPRProcess>SSYCNE_JMA_01.JMA_002.ws:JMA_002_P</bgtCMPRProcess>
+            <bgtCMPRYearProcess>SSYCNE_JMA_01.JMA_003.ws:JMA_003_P</bgtCMPRYearProcess>
+            <fldSiteQTYProcess>SSYCNE_JMA_01.JMA_006.ws:JMA_006_P</fldSiteQTYProcess>
+            <fldSiteQTYDTLProcess>SSYCNE_JMA_01.JMA_007.ws:JMA_007_P</fldSiteQTYDTLProcess>
+            <fwrdREQProcess>SSYCNE_JMA_01.JMA_008.ws:JMA_008_P</fwrdREQProcess>
+            <fwrdREQDTLProcess>SSYCNE_JMA_01.JMA_009.ws:JMA_009_P</fwrdREQDTLProcess>
+            <fwrdREQEXCUTEProcess>SSYCNE_JMA_01.JMA_010.ws:JMA_010_P</fwrdREQEXCUTEProcess>
+                        <fwrdSTOCKALLProcess>SSYCNE_JMA_01.JMA_037.ws:JMA_037_P</fwrdSTOCKALLProcess>
+                        <fwrdSTOCK1Process>SSYCNE_JMA_01.JMA_038.ws:JMA_038_P</fwrdSTOCK1Process>
+                        <fwrdSTOCK2Process>SSYCNE_JMA_01.JMA_039.ws:JMA_039_P</fwrdSTOCK2Process>
+                        <fwrdTIMEProcess>SSYCNE_JMA_01.JMA_014.ws:JMA_014_P</fwrdTIMEProcess>
+                        <hmatSTOCKProcess>SSYCNE_JMA_01.JMA_036.ws:JMA_036_P</hmatSTOCKProcess>
+                <authProcess>SSYCNE_JMA_01.JMA_015.ws:JMA_015_P</authProcess>
+                <commonCode>SSYCNE_JMA_01.JMA_016.ws:JMA_016_P</commonCode>
+                <rcptListProcess>JMA131Process.jpd</rcptListProcess>
+                <rcptListDtlProcess>JMA132Process.jpd</rcptListDtlProcess>
+                <rcptListEXCUTElProcess>JMA133Process.jpd</rcptListEXCUTElProcess>
+                <noteNoListProcess>JMA134Process.jpd</noteNoListProcess>
+                <rcptAcctListProcess>JMA135Process.jpd</rcptAcctListProcess>
+                <vrtlAcctNoListProcess>JMA136Process.jpd</vrtlAcctNoListProcess>
+                <asgnListProcess>SSYCNE_JMA_01.JMA_023.ws:JMA_023_P</asgnListProcess>
+                <asgnSaveProcess>SSYCNE_JMA_01.JMA_024.ws:JMA_024_P</asgnSaveProcess>
+                <patrolListProcess>SSYCNE_JMA_01.JMA_031.ws:JMA_031_P</patrolListProcess>
+                <patrolDtlProcess>SSYCNE_JMA_01.JMA_032.ws:JMA_032_P</patrolDtlProcess>
+                <patrolInsertProcess>SSYCNE_JMA_01.JMA_033.ws:JMA_033_P</patrolInsertProcess>
+                <patrolUpdateProcess>SSYCNE_JMA_01.JMA_034.ws:JMA_034_P</patrolUpdateProcess>
+                <patrolDeleteProcess>SSYCNE_JMA_01.JMA_035.ws:JMA_035_P</patrolDeleteProcess>
+                <historyInsertProcess>SSYCNE_JMA_01.JMA_029.ws:JMA_029_P</historyInsertProcess>
+                <empListProcess>JMA103Process.jpd</empListProcess>
+                <voycntListProcess>JMA144Process.jpd</voycntListProcess>
+                <voycntUpdateProcess>JMA145Process.jpd</voycntUpdateProcess>
+                <exprsMatListProcess>JMA146Process.jpd</exprsMatListProcess>
+  <fItmMainInfoProcess>SSYCNE_JMA_01.JMA_148.ws:JMA_148_P</fItmMainInfoProcess>
+                        <fItmInfoSaveProcess>SSYCNE_JMA_01.JMA_149.ws:JMA_149_P</fItmInfoSaveProcess>
+                        <deptInfoSaveProcess>SSYCNE_JMA_01.JMA_150.ws:JMA_150_P</deptInfoSaveProcess>
+                        <fItemMgmtHisSaveProcess>SSYCNE_JMA_01.JMA_151.ws:JMA_151_P</fItemMgmtHisSaveProcess>
+                        <fItemMgmtHisDeleteProcess>SSYCNE_JMA_01.JMA_152.ws:JMA_152_P</fItemMgmtHisDeleteProcess>
+                        <fItemFileDeleteProcess>SSYCNE_JMA_01.JMA_153.ws:JMA_153_P</fItemFileDeleteProcess>
+                        <deptInfoProcess>SSYCNE_JMA_01.JMA_154.ws:JMA_154_P</deptInfoProcess>
+                        <chkLubrInfoProcess>SSYCNE_JMA_01.JMA_155.ws:JMA_155_P</chkLubrInfoProcess>
+                        <banCodeProcess>SSYCNE_JMA_01.JMA_156.ws:JMA_156_P</banCodeProcess>
+                        <chkRsltProcess>SSYCNE_JMA_01.JMA_157.ws:JMA_157_P</chkRsltProcess>
+                        <fitmChkRsltInsertProcess>SSYCNE_JMA_01.JMA_158.ws:JMA_158_P</fitmChkRsltInsertProcess>
+                        <fitmChkRsltUpdateProcess>SSYCNE_JMA_01.JMA_159.ws:JMA_159_P</fitmChkRsltUpdateProcess>
+                        <fitmChkRsltDeleteProcess>SSYCNE_JMA_01.JMA_160.ws:JMA_160_P</fitmChkRsltDeleteProcess>
+                        <wrkngReqsProcess>SSYCNE_JMA_01.JMA_161.ws:JMA_161_P</wrkngReqsProcess>
+                        <wrkngReqsDtlProcess>SSYCNE_JMA_01.JMA_162.ws:JMA_162_P</wrkngReqsDtlProcess>
+                        <wrkngReqsSaveProcess>SSYCNE_JMA_01.JMA_163.ws:JMA_163_P</wrkngReqsSaveProcess>
+                        <wrkngReqsDeleteProcess>SSYCNE_JMA_01.JMA_164.ws:JMA_164_P</wrkngReqsDeleteProcess>
+                        <repairHistoryProcess>SSYCNE_JMA_01.JMA_165.ws:JMA_165_P</repairHistoryProcess>
+                        <wrkngReqsStatSaveProcess>SSYCNE_JMA_01.JMA_166.ws:JMA_166_P</wrkngReqsStatSaveProcess>
+                        <wrkngLiabBanCdSaveProcess>SSYCNE_JMA_01.JMA_167.ws:JMA_167_P</wrkngLiabBanCdSaveProcess>
+                        <wrkngOdrInfoProcess>SSYCNE_JMA_01.JMA_168.ws:JMA_168_P</wrkngOdrInfoProcess>
+                        <wrkngOdrInfoDtlProcess>SSYCNE_JMA_01.JMA_169.ws:JMA_169_P</wrkngOdrInfoDtlProcess>
+                        <wrkngListByOdrNoProcess>SSYCNE_JMA_01.JMA_170.ws:JMA_170_P</wrkngListByOdrNoProcess>
+                        <wrkngOdrInfoSaveProcess>SSYCNE_JMA_02.JMA_171.ws:JMA_171_P</wrkngOdrInfoSaveProcess>
+                        <wrkngOdrInfoDeleteProcess>SSYCNE_JMA_02.JMA_172.ws:JMA_172_P</wrkngOdrInfoDeleteProcess>
+                        <wrkngHisProcess>SSYCNE_JMA_02.JMA_173.ws:JMA_173_P</wrkngHisProcess>
+                        <wrkngHisSaveProcess>SSYCNE_JMA_02.JMA_175.ws:JMA_175_P</wrkngHisSaveProcess>
+                        <wrkngHisDeleteProcess>SSYCNE_JMA_02.JMA_176.ws:JMA_176_P</wrkngHisDeleteProcess>
+                        <workSttProcess>SSYCNE_JMA_02.JMA_177.ws:JMA_177_P</workSttProcess>
+                        <lubrRsltProcess>SSYCNE_JMA_02.JMA_178.ws:JMA_178_P</lubrRsltProcess>
+                        <lubrRsltSaveProcess>SSYCNE_JMA_02.JMA_179.ws:JMA_179_P</lubrRsltSaveProcess>
+                        <facltAuthProcess>SSYCNE_JMA_02.JMA_180.ws:JMA_180_P</facltAuthProcess>
+                        <fItemCdProcess>SSYCNE_JMA_02.JMA_181.ws:JMA_181_P</fItemCdProcess>
+                        <fItemProcess>SSYCNE_JMA_02.JMA_182.ws:JMA_182_P</fItemProcess>
+                        <banNmProcess>SSYCNE_JMA_02.JMA_183.ws:JMA_183_P</banNmProcess>
+                        <custSiteProcess>SSYCNE_JMA_02.JMA_184.ws:JMA_184_P</custSiteProcess>
+                        <pushRecptrProcess>SSYCNE_JMA_02.JMA_187.ws:JMA_187_P</pushRecptrProcess>
+
         </endpoint>
 	</eai>
 	<server>
@@ -66,6 +126,6 @@
     <login>
     	<length>17</length>
     </login>
-    <fitm_file_path>/FitmFiles</fitm_file_path>
+    <fitm_file_path>/alpineAppnd</fitm_file_path>
 </configuration>
 

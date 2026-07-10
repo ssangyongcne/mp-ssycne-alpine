@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.stereotype.Repository;
 
 import kr.co.sscm.alpine.board.dto.BoardAppndFileRequest;
+import kr.co.sscm.alpine.board.dto.BoardAppndFileResponse;
 import kr.co.sscm.alpine.board.dto.BoardDetailResponse;
 import kr.co.sscm.alpine.board.dto.BoardSaveRequest;
 import kr.co.sscm.alpine.board.dto.BoardSummaryResponse;
@@ -30,6 +31,11 @@ public class BoardDao extends BaseDao {
 	/** Select detail body, attachment group, and view count. */
 	public BoardDetailResponse selectBoardDetail(Long boardNo) {
 		return gwSqlSession.selectOne(nameSpace + ".selectBoardDetail", boardNo);
+	}
+
+	/** Select attachment metadata rows by group UUID in sort order. */
+	public List<BoardAppndFileResponse> selectAppndFileList(String appndFileGroupUuid) {
+		return gwSqlSession.selectList(nameSpace + ".selectAppndFileList", appndFileGroupUuid);
 	}
 
 	/** Increase view count by one. */

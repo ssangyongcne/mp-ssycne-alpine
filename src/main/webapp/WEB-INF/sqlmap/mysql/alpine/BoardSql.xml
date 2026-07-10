@@ -43,6 +43,19 @@
 		<result property="writer" column="writer" />
 		<result property="viewCount" column="view_count" />
 	</resultMap>
+	<resultMap id="boardAppndFileResultMap" type="kr.co.sscm.alpine.board.dto.BoardAppndFileResponse">
+		<id property="appndFileUuid" column="appnd_file_uuid" />
+		<result property="appndFileGroupUuid" column="appnd_file_group_uuid" />
+		<result property="filePath" column="file_path" />
+		<result property="originalName" column="original_name" />
+		<result property="savedName" column="saved_name" />
+		<result property="extension" column="extension" />
+		<result property="mimeType" column="mime_type" />
+		<result property="fileSize" column="file_size" />
+		<result property="paramName" column="param_name" />
+		<result property="sortOrder" column="sort_order" />
+		<result property="downloadCount" column="download_count" />
+	</resultMap>
 
 	<select id="selectBoardCount" parameterType="map" resultType="int">
 		/* BoardDao.selectBoardCount */
@@ -80,6 +93,25 @@
 		FROM AP_BOARD b
 		WHERE b.BOARD_NO = #{boardNo}
 		AND b.USE_YN = 'Y'
+	</select>
+	<select id="selectAppndFileList" parameterType="string" resultMap="boardAppndFileResultMap">
+		/* BoardDao.selectAppndFileList */
+		SELECT
+			f.APPND_FILE_UUID AS appnd_file_uuid,
+			f.APPND_FILE_GROP_UUID AS appnd_file_group_uuid,
+			f.APPND_FILE_PATH_CNTS AS file_path,
+			f.APPND_FILE_ORIG_NM AS original_name,
+			f.APPND_FILE_TRANSMS_NM AS saved_name,
+			f.APPND_FILE_FLEXT_NM AS extension,
+			f.APPND_FILE_MIME_CNTS AS mime_type,
+			f.APPND_FILE_SIZ AS file_size,
+			f.APPND_FILE_PARM_NM AS param_name,
+			f.SRT_ORD AS sort_order,
+			f.DWNLD_COUNT AS download_count
+		FROM ap_appnd_file_mgmt f
+		WHERE f.APPND_FILE_GROP_UUID = #{appndFileGroupUuid}
+		AND IFNULL(f.APPND_FILE_DEL_YN, 'N') = 'N'
+		ORDER BY f.SRT_ORD ASC, f.APPND_FILE_UUID ASC
 	</select>
 
 	<update id="updateBoardViewCount" parameterType="long">
