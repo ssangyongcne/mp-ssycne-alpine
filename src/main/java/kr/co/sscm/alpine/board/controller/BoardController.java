@@ -1,4 +1,4 @@
-﻿package kr.co.sscm.alpine.board.controller;
+package kr.co.sscm.alpine.board.controller;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,14 +19,12 @@ import kr.co.sscm.alpine.board.dto.BoardSaveRequest;
 import kr.co.sscm.alpine.board.dto.BoardSearchRequest;
 import kr.co.sscm.alpine.board.service.BoardService;
 import kr.co.sscm.alpine.common.dto.AlpineSaveResponse;
-import kr.co.sscm.alpine.common.dto.ApiResponse;
 import kr.co.sscm.common.base.BaseController;
+import kr.co.sscm.common.exception.ApiException;
 import kr.co.sscm.common.util.CommonUtils;
+import kr.co.sscm.common.util.FileUploadUtils;
 
-/**
- * 산악회 게시판 API 컨트롤러.
- * 모바일 MNet 호출 방식에 맞춰 모든 게시판 API를 POST로 받는다.
- */
+/** Board API controller for the Morpheus mobile app. */
 @Controller
 @RequestMapping("/api/alpine")
 public class BoardController extends BaseController {
@@ -33,9 +32,9 @@ public class BoardController extends BaseController {
 	@Autowired
 	private BoardService boardService;
 
-	/** 게시판 목록 조회. 기존 /board POST 호출도 목록조회로 처리한다. */
+	/** Board list. The legacy /board POST call is also treated as list lookup. */
 	@PostMapping(value = { "/board", "/board/getBoardList" }, produces = "application/json; charset=utf8")
-	public @ResponseBody ApiResponse<BoardListResponse> getBoardList(@RequestBody(required = false) Map<String, Object> requestMap) {
+	public @ResponseBody Map<String, Object> getBoardList(@RequestBody(required = false) Map<String, Object> requestMap, HttpServletRequest httpRequest) {
 		Map<String, Object> bodyMap = getBodyMap(requestMap);
 
 		BoardSearchRequest request = new BoardSearchRequest();
@@ -43,37 +42,130 @@ public class BoardController extends BaseController {
 		request.setYear(toString(bodyMap.get("year")));
 		request.setKeyword(toString(bodyMap.get("keyword")));
 
-		return ApiResponse.success(boardService.getBoardList(request));
+		BoardListResponse response = boardService.getBoardList(request);
+		return createMspResponse(requestMap, httpRequest, "200", "success", response);
 	}
 
-	/** 게시글 상세 조회. 상세 진입 시 조회수도 함께 증가한다. */
+	/** Board detail. View count is increased when detail is opened. */
 	@PostMapping(value = "/board/getBoardDetail", produces = "application/json; charset=utf8")
-	public @ResponseBody ApiResponse<BoardDetailResponse> getBoardDetail(@RequestBody(required = false) Map<String, Object> requestMap) {
+	public @ResponseBody Map<String, Object> getBoardDetail(@RequestBody(required = false) Map<String, Object> requestMap, HttpServletRequest httpRequest) {
 		Map<String, Object> bodyMap = getBodyMap(requestMap);
-		return ApiResponse.success(boardService.getBoardDetail(toLong(bodyMap.get("boardNo"))));
+		BoardDetailResponse response = boardService.getBoardDetail(toLong(bodyMap.get("boardNo")));
+		return createMspResponse(requestMap, httpRequest, "200", "success", response);
 	}
 
-	/** 게시글 등록. 등록자 IP는 서버에서 request 기준으로 세팅한다. */
-	@PostMapping(value = "/board/insertBoard", produces = "application/json; charset=utf8")
-	public @ResponseBody ApiResponse<AlpineSaveResponse> insertBoard(@RequestBody(required = false) Map<String, Object> requestMap, HttpServletRequest httpRequest) {
+	/** Board insert with JSON request body. */
+	@PostMapping(value = "/board/insertBoard", consumes = MediaType.APPLICATION_JSON_VALUE, produces = "application/json; charset=utf8")
+	public @ResponseBody Map<String, Object> insertBoard(@RequestBody(required = false) Map<String, Object> requestMap, HttpServletRequest httpRequest) {
 		BoardSaveRequest request = createSaveRequest(getBodyMap(requestMap));
-		return ApiResponse.success(boardService.insertBoard(request, CommonUtils.getClientIP(httpRequest)));
+		AlpineSaveResponse response = boardService.insertBoard(request, CommonUtils.getClientIP(httpRequest));
+		return createMspResponse(requestMap, httpRequest, "200", "success", response);
 	}
 
-	/** 게시글 수정. 요청 body의 boardNo를 기준으로 수정 대상을 확정한다. */
-	@PostMapping(value = "/board/updateBoard", produces = "application/json; charset=utf8")
-	public @ResponseBody ApiResponse<Boolean> updateBoard(@RequestBody(required = false) Map<String, Object> requestMap, HttpServletRequest httpRequest) {
+	/** Board insert with multipart form-data and optional image files. */
+	@PostMapping(value = "/board/insertBoard", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "application/json; charset=utf8")
+	public @ResponseBody Map<String, Object> insertBoardMultipart(HttpServletRequest httpRequest) throws ApiException {
+		BoardSaveRequest request = createSaveRequest(getParameterMap(httpRequest));
+		Map<String, Object> uploadedFileMap = FileUploadUtils.fileUpload(httpRequest);
+		String fileGroupUuid = getFirstFileGroupUuid(uploadedFileMap);
+		if (fileGroupUuid != null) {
+			request.setAppendFileGroupUuid(fileGroupUuid);
+		}
+
+		AlpineSaveResponse response = boardService.insertBoard(request, CommonUtils.getClientIP(httpRequest), uploadedFileMap);
+		return createMspResponse(null, httpRequest, "200", "success", response);
+	}
+
+	/** Board update. */
+	@PostMapping(value = "/board/updateBoard", consumes = MediaType.APPLICATION_JSON_VALUE, produces = "application/json; charset=utf8")
+	public @ResponseBody Map<String, Object> updateBoard(@RequestBody(required = false) Map<String, Object> requestMap, HttpServletRequest httpRequest) {
 		Map<String, Object> bodyMap = getBodyMap(requestMap);
 		BoardSaveRequest request = createSaveRequest(bodyMap);
 		Long boardNo = toLong(bodyMap.get("boardNo"));
-		return ApiResponse.success(boardService.updateBoard(boardNo, request, CommonUtils.getClientIP(httpRequest)));
+		Boolean response = boardService.updateBoard(boardNo, request, CommonUtils.getClientIP(httpRequest));
+		return createMspResponse(requestMap, httpRequest, "200", "success", response);
 	}
 
-	/** 게시글 삭제. 실제 row 삭제가 아니라 USE_YN = 'N'으로 비활성 처리한다. */
+	/** Board update with multipart form-data and optional image files. */
+	@PostMapping(value = "/board/updateBoard", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "application/json; charset=utf8")
+	public @ResponseBody Map<String, Object> updateBoardMultipart(HttpServletRequest httpRequest) throws ApiException {
+		BoardSaveRequest request = createSaveRequest(getParameterMap(httpRequest));
+		Map<String, Object> uploadedFileMap = FileUploadUtils.fileUpload(httpRequest);
+
+		Boolean response = boardService.updateBoard(request.getBoardNo(), request, CommonUtils.getClientIP(httpRequest), uploadedFileMap);
+		return createMspResponse(null, httpRequest, "200", "success", response);
+	}
+	/** Board delete. Rows are soft-deleted by USE_YN = N. */
 	@PostMapping(value = "/board/deleteBoard", produces = "application/json; charset=utf8")
-	public @ResponseBody ApiResponse<Boolean> deleteBoard(@RequestBody(required = false) Map<String, Object> requestMap, HttpServletRequest httpRequest) {
+	public @ResponseBody Map<String, Object> deleteBoard(@RequestBody(required = false) Map<String, Object> requestMap, HttpServletRequest httpRequest) {
 		Map<String, Object> bodyMap = getBodyMap(requestMap);
-		return ApiResponse.success(boardService.deleteBoard(toLong(bodyMap.get("boardNo")), toString(bodyMap.get("userNo")), CommonUtils.getClientIP(httpRequest)));
+		Boolean response = boardService.deleteBoard(toLong(bodyMap.get("boardNo")), toString(bodyMap.get("userNo")), CommonUtils.getClientIP(httpRequest));
+		return createMspResponse(requestMap, httpRequest, "200", "success", response);
+	}
+
+	private Map<String, Object> createMspResponse(Map<String, Object> requestMap, HttpServletRequest httpRequest, String resultCode, String resultMsg, Object result) {
+		Map<String, Object> responseMap = new HashMap<String, Object>();
+		Map<String, Object> headMap = new HashMap<String, Object>();
+		Map<String, Object> bodyMap = new HashMap<String, Object>();
+
+		headMap.put("result_code", resultCode);
+		headMap.put("result_msg", resultMsg);
+		headMap.put("screen_id", getScreenId(requestMap, httpRequest));
+
+		bodyMap.put("resultCode", resultCode);
+		bodyMap.put("resultMsg", resultMsg);
+		bodyMap.put("result", result);
+
+		responseMap.put("head", headMap);
+		responseMap.put("body", bodyMap);
+		return responseMap;
+	}
+
+	@SuppressWarnings("unchecked")
+	private String getScreenId(Map<String, Object> requestMap, HttpServletRequest httpRequest) {
+		if (requestMap != null) {
+			Object head = requestMap.get("head");
+			if (head instanceof Map) {
+				Object screenId = ((Map<String, Object>) head).get("screen_id");
+				if (screenId != null) {
+					return String.valueOf(screenId);
+				}
+			}
+		}
+
+		String screenId = httpRequest.getHeader("screen_id");
+		return screenId == null ? "" : screenId;
+	}
+
+	@SuppressWarnings("unchecked")
+	private String getFirstFileGroupUuid(Map<String, Object> uploadedFileMap) {
+		if (uploadedFileMap == null || uploadedFileMap.isEmpty()) {
+			return null;
+		}
+		for (Object value : uploadedFileMap.values()) {
+			if (value instanceof Map) {
+				Object fileGroupUuid = ((Map<String, Object>) value).get("FILE_GRP_UUID");
+				if (fileGroupUuid != null) {
+					return String.valueOf(fileGroupUuid);
+				}
+			}
+		}
+		return null;
+	}
+
+	private Map<String, Object> getParameterMap(HttpServletRequest request) {
+		Map<String, Object> paramMap = new HashMap<String, Object>();
+		paramMap.put("boardNo", request.getParameter("boardNo"));
+		paramMap.put("boardType", request.getParameter("boardType"));
+		paramMap.put("title", request.getParameter("title"));
+		paramMap.put("detail", firstNotEmpty(request.getParameter("detail"), request.getParameter("content")));
+		paramMap.put("appendFileGroupUuid", request.getParameter("appendFileGroupUuid"));
+		paramMap.put("postDate", request.getParameter("postDate"));
+		paramMap.put("writerEmpNo", request.getParameter("writerEmpNo"));
+		paramMap.put("userNo", request.getParameter("userNo"));
+		paramMap.put("deletedFileUuids", request.getParameter("deletedFileUuids"));
+		paramMap.put("fileOrderTokens", request.getParameter("fileOrderTokens"));
+		return paramMap;
 	}
 
 	private BoardSaveRequest createSaveRequest(Map<String, Object> bodyMap) {
@@ -81,11 +173,13 @@ public class BoardController extends BaseController {
 		request.setBoardNo(toLong(bodyMap.get("boardNo")));
 		request.setBoardType(toString(bodyMap.get("boardType")));
 		request.setTitle(toString(bodyMap.get("title")));
-		request.setDetail(toString(bodyMap.get("detail")));
+		request.setDetail(firstNotEmpty(toString(bodyMap.get("detail")), toString(bodyMap.get("content"))));
 		request.setAppendFileGroupUuid(toString(bodyMap.get("appendFileGroupUuid")));
 		request.setPostDate(toString(bodyMap.get("postDate")));
 		request.setWriterEmpNo(toString(bodyMap.get("writerEmpNo")));
 		request.setUserNo(toString(bodyMap.get("userNo")));
+		request.setDeletedFileUuids(toString(bodyMap.get("deletedFileUuids")));
+		request.setFileOrderTokens(toString(bodyMap.get("fileOrderTokens")));
 		return request;
 	}
 
@@ -105,6 +199,12 @@ public class BoardController extends BaseController {
 		return value == null ? null : String.valueOf(value);
 	}
 
+	private String firstNotEmpty(String first, String second) {
+		if (first != null && first.trim().length() > 0) {
+			return first;
+		}
+		return second;
+	}
 	private Long toLong(Object value) {
 		if (value instanceof Number) {
 			return Long.valueOf(((Number) value).longValue());

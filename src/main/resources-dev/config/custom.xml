@@ -46,7 +46,7 @@
     <eai>
         <endpoint>
             <base>http://150.2.150.129:7001/SIS_EAI_Process/com/sis/eai/flowcontrol/mobile/</base>
-			<mobileLoginProcess>SSYCNE_JMA_01.JMA_028.ws:JMA_028_P</mobileLoginProcess>
+			<mobileLoginProcess>JMA101Process.jpd?WSDL</mobileLoginProcess>
             <bgtCMPRProcess>SSYCNE_JMA_01.JMA_002.ws:JMA_002_P</bgtCMPRProcess>
             <bgtCMPRYearProcess>SSYCNE_JMA_01.JMA_003.ws:JMA_003_P</bgtCMPRYearProcess>
             <fldSiteQTYProcess>SSYCNE_JMA_01.JMA_006.ws:JMA_006_P</fldSiteQTYProcess>
@@ -93,6 +93,7 @@
     <login>
     	<length>17</length>
     </login>
-    <fitm_file_path>/FitmFiles</fitm_file_path>
+    <fitm_file_path>/erpwasappnd/alpineAppnd</fitm_file_path>
 </configuration>
+
 

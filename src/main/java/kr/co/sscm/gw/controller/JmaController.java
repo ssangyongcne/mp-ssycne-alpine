@@ -1,5 +1,8 @@
 package kr.co.sscm.gw.controller;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -11,7 +14,11 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,6 +55,9 @@ public class JmaController extends BaseController{
 
 	@Value("${db.use}")
     private boolean dbUse;				// DB 사용 여부
+
+	@Value("${fitm_file_path}")
+    private String fitmFilePath;
 
 	/**
 	 * EAI 호출  수정
@@ -280,5 +290,27 @@ public class JmaController extends BaseController{
 		responseDto = gwService.saveFaultReports(requestDto);
 		
 		return responseDto;
+	}
+	/** Inline image view for files stored under fitm_file_path/yyyy/MM/dd. */
+	@GetMapping(value = "/imageView/{path1}/{path2}/{path3}/{fileNm}")
+	public ResponseEntity<byte[]> imageView(@PathVariable String path1, @PathVariable String path2,
+			@PathVariable String path3, @PathVariable String fileNm) throws IOException {
+		String imagePath = fitmFilePath + File.separator + path1 + File.separator + path2 + File.separator + path3
+				+ File.separator + fileNm;
+		byte[] imageBytes = null;
+		try {
+			imageBytes = gwService.loadImage(imagePath);
+		} catch (FileNotFoundException e) {
+			logger.error("imageView ERROR : {}", e);
+			return ResponseEntity.notFound().build();
+		}
+		if (imageBytes == null) {
+			return ResponseEntity.notFound().build();
+		}
+		MediaType mediaType = gwService.detectContentType(imageBytes);
+		return ResponseEntity.ok()
+				.contentType(mediaType)
+				.header(HttpHeaders.CONTENT_DISPOSITION, "inline")
+				.body(imageBytes);
 	}
 }

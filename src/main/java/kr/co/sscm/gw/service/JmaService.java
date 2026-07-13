@@ -1,14 +1,13 @@
-package kr.co.sscm.gw.service;
+﻿package kr.co.sscm.gw.service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.jdom.Element;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import kr.co.sscm.common.Constants;
@@ -30,9 +29,6 @@ import kr.co.sscm.common.util.SoapUtil;
  */
 @Service
 public class JmaService extends XmlBaseService{
-	
-	@Autowired
-	private PasswordEncoder passwordEncoder;
 
 	@Value("${eai.endpoint.mobileLoginProcess}")
     private String mobileLoginProcess;				// 로그인
@@ -126,20 +122,10 @@ public class JmaService extends XmlBaseService{
 
 	@Value("${eai.endpoint.exprsMatListProcess}") 
 	private String exprsMatListProcess;        		// 속보현황 조회 
-	
-	@Value("${eai.endpoint.historyInsertProcess}")
-	private String historyInsertProcess;
 
 	@Value("${login.length}")
     private int loginLength;						//
 
-	public boolean isMatched(String plainPassword, String encodedPassword) {
-	   return this.passwordEncoder.matches(plainPassword, encodedPassword);
-	}
-
-	public String encodePassword(String plainPassword) throws Exception {
-	   return this.passwordEncoder.encode(plainPassword);
-	}
 	
 	public String factConvert(String factCd) throws Exception {
 		
@@ -176,41 +162,50 @@ public class JmaService extends XmlBaseService{
 	 */
 	public ApiResponseDto getJMA101Process(ApiRequestDto requestDto) throws Exception {
 
-	      ApiResponseDto apiResponse = new ApiResponseDto(requestDto);
-	      Map<String, Object> result = new HashMap();
-	      String empNo = CommonUtils.isToString(requestDto.reqBodyMap.get("empNo"));
-	      String uzrPw = CommonUtils.isToString(requestDto.reqBodyMap.get("uzrPw"));
-	      String scrId = CommonUtils.isToString(requestDto.reqBodyMap.get("scrId"));
-	      String wrkTyp = CommonUtils.isToString(requestDto.reqBodyMap.get("wrkTyp"));
-	      String comptAddr = CommonUtils.isToString(requestDto.reqBodyMap.get("comptAddr"));
-	      String uzrIp = CommonUtils.isToString(requestDto.reqBodyMap.get("uzrIp"));
-	      if (!CommonUtils.isExist(empNo)) {
-	         throw new ValidationException("사원번호");
-	      } else if (!CommonUtils.isExist(uzrPw)) {
-	         throw new ValidationException("사용자 암호");
-	      } else {
-	         uzrPw = AES256Util.decrypt(uzrPw);
-	         Element eleAction = new Element("clientRequestwithReturn");
-	         eleAction.addContent(SoapUtil.getElementNew("EMPNO", empNo));
-	         eleAction.addContent(SoapUtil.getElementNew("UZR_PW", this.encodePassword(uzrPw)));
-	         eleAction.addContent(SoapUtil.getElementNew("SCR_ID", scrId));
-	         eleAction.addContent(SoapUtil.getElementNew("WRK_TYP", wrkTyp));
-	         eleAction.addContent(SoapUtil.getElementNew("COMPT_ADDR", comptAddr));
-	         eleAction.addContent(SoapUtil.getElementNew("UZR_IP", uzrIp));
-	         Map<String, Object> resString = SoapUtil.sendSoapServerMapNew("dummyUrl", this.mobileLoginProcess, SoapUtil.getSoapXmlStringNew(eleAction, this.mobileLoginProcess));
-	         String apiResult = super.xmlMapToStringNew(resString);
-	         apiResult = apiResult.substring(1);
-	         String[] row = apiResult.split("\\|\\|", -1);
-	         boolean pwdChk = false;
-	         if (this.isMatched(uzrPw, row[5])) {
-	            pwdChk = true;
-	         }
+		ApiResponseDto apiResponse = new ApiResponseDto(requestDto);
+		Map<String, Object> result = new HashMap<String, Object>();
 
-	         this.logger.debug("login length : " + row.length);
-	         if (row.length == this.loginLength && !row[0].equals("XX") && pwdChk) {
-        	
-        	
-        	
+		String empNo = CommonUtils.isToString(requestDto.reqBodyMap.get("empNo"));			// 사원번호
+		String uzrPw = CommonUtils.isToString(requestDto.reqBodyMap.get("uzrPw"));			// 사용자 암호
+		String scrId = CommonUtils.isToString(requestDto.reqBodyMap.get("scrId"));			// 화면ID
+		String wrkTyp = CommonUtils.isToString(requestDto.reqBodyMap.get("wrkTyp"));		// 작업유형
+		String comptAddr = CommonUtils.isToString(requestDto.reqBodyMap.get("comptAddr"));	// MAC주소
+		String uzrIp = CommonUtils.isToString(requestDto.reqBodyMap.get("uzrIp"));			// 사용자IP
+
+		// validation check
+		if (!CommonUtils.isExist(empNo)) {
+			throw new ValidationException(Constants.EMPNO);
+		}
+
+		if (!CommonUtils.isExist(uzrPw)) {
+			throw new ValidationException(Constants.UZR_PW);
+		}
+
+		uzrPw = AES256Util.decrypt(uzrPw);
+
+		Element eleAction = new Element(Constants.CLIENT_REQUEST, "http://www.openuri.org/");
+		eleAction.addContent(SoapUtil.getElement("EMPNO", empNo));
+		eleAction.addContent(SoapUtil.getElement("UZR_PW", uzrPw));
+		eleAction.addContent(SoapUtil.getElement("SCR_ID", scrId));
+		eleAction.addContent(SoapUtil.getElement("WRK_TYP", wrkTyp));
+		eleAction.addContent(SoapUtil.getElement("COMPT_ADDR", comptAddr));
+		eleAction.addContent(SoapUtil.getElement("UZR_IP", uzrIp));
+
+		// EAI 통신
+		Map<String, Object> resString = SoapUtil.sendSoapServerMap(mobileLoginProcess, SoapUtil.getSoapXmlString( eleAction ));
+
+		// EAI 통신 결과 String 변환
+		String apiResult = super.xmlMapToString(resString);
+
+		apiResult = apiResult.substring(1);
+		String[] row = apiResult.split("\\|\\|", -1);
+
+		// COUNT(1), 사번, 이름, 조직코드, 조직명, CHECK RETURN
+        // 로그인 사번/비번 조회 결과
+
+		// 개발 row.length == 17, 운영 row.length == 14
+        if (row.length == loginLength && !row[0].equals("XX")&& Integer.parseInt(row[4]) == 0)
+        {
         	result.put("EMPNO"			, row[0]);	// 사원번호
 			result.put("UZR_NM"			, row[1]);	// 사원이름
 			result.put("COMB_ORG_CD"	, row[2]);	// 조직코드
@@ -229,38 +224,50 @@ public class JmaService extends XmlBaseService{
 			result.put("MAT_RCVPAY_ORG_NM"	, row[15]);	
 			result.put("UPP_BGT_ORG_CD"	, row[16]);	// 소속 사업장 코드
 
-			
-			
-			
-			
 			LoginInfoDto loginInfo = new LoginInfoDto();
-            loginInfo.setEmpNo(row[1]);
-            loginInfo.setUzrNm(row[2]);
-            loginInfo.setCombOrgCd(row[3]);
-            loginInfo.setCombNm(row[4]);
-            loginInfo.setPwChk(row[5]);
-            loginInfo.setSalUtCd(row[6]);
-            loginInfo.setMeetClose1(row[7]);
-            loginInfo.setMeetClose2(row[8]);
-            loginInfo.setRetrvSalUt(row[9]);
-            loginInfo.setSalPartCd(row[10]);
-            loginInfo.setIp(uzrIp);
-            SessionUtils.setLoginInfo(loginInfo);
-            this.getJMA029Processs(empNo, scrId, wrkTyp, comptAddr);
-            apiResponse.putBody("result", result);
-            return apiResponse;
-         } else if (row.length > 1) {
-            if (row[1].equals("XX") && row[2].equals("XX")) {
-               throw new ApiException("사원정보가 존재하지 않습니다.");
-            } else if (!row[1].equals("XX") && !pwdChk) {
-               throw new ApiException("비밀번호가 틀립니다");
-            } else {
-               throw new ApiException("사원번호와 비밀번호를 확인하십시오." + row.length);
-            }
-         } else {
-            throw new ApiException("로그인 오류입니다.");
-         }
-      }
+			loginInfo.setEmpNo(row[0]);
+			loginInfo.setUzrNm(row[1]);
+			loginInfo.setCombOrgCd(row[2]);
+			loginInfo.setCombNm(row[3]);
+			loginInfo.setPwChk(row[4]);
+			loginInfo.setSalUtCd(row[5]);
+			loginInfo.setAuthId(row[6]);
+			loginInfo.setAuthId2(row[7]);
+			loginInfo.setAuthId3(row[8]);
+			loginInfo.setAuthId4(row[9]);
+			loginInfo.setMeetClose1(row[10]);
+			loginInfo.setMeetClose2(row[11]);
+			loginInfo.setRetrvSalUt(row[12]);
+			loginInfo.setSalPartCd(row[13]);
+			loginInfo.setMatRcvpayOrgCd(row[14]);
+			loginInfo.setMatRcvpayOrgNm(row[15]);
+			loginInfo.setUppBgtOrgCd(row[16]);
+			
+			loginInfo.setIp(uzrIp);
+
+			// 세션 생성
+			SessionUtils.setLoginInfo(loginInfo);
+
+        }else if(row.length > 1){
+
+        	if (row[0].equals("XX")&&row[1].equals("XX")){
+
+        		throw new ApiException("사원정보가 존재하지 않습니다.");
+
+        	}else if(!row[0].equals("XX") && Integer.parseInt(row[4]) == 1){
+
+        		throw new ApiException("비밀번호가 틀립니다");
+        	}else{
+
+        		throw new ApiException("사원번호와 비밀번호를 확인하십시오." + row.length);
+        	}
+
+        }else{
+        	throw new ApiException("로그인 오류입니다.");
+        }
+
+        apiResponse.putBody("result", result);
+		return apiResponse;
 	}
 	
 	
@@ -448,7 +455,7 @@ public class JmaService extends XmlBaseService{
 				data.put("DD_QTY"		, row[co++]);	// 일 출하량
 				data.put("MM_QTY"		, row[co++]);	// 월 출하량
 				data.put("YY_QTY"		, row[co++]);	// 년 출하량
-				//data.put("TOT_QTY"		, row[co++]);
+				data.put("TOT_QTY"		, row[co++]);
     			list.add(data);
 			}
 		}
@@ -485,20 +492,20 @@ public class JmaService extends XmlBaseService{
 		String action = Constants.CLIENT_REQUEST;
 
 		Element eleAction = new Element(action, "http://www.openuri.org/");
-		eleAction.addContent(SoapUtil.getElementNew("STD_DT", stdDt));
-		eleAction.addContent(SoapUtil.getElementNew("SAL_UT_CD", salUtCd));
-		eleAction.addContent(SoapUtil.getElementNew("PROD_CD", prodCd));
-		eleAction.addContent(SoapUtil.getElementNew("FLD_NM", fldNm));
-		eleAction.addContent(SoapUtil.getElementNew("EMPNO", empNo));
-		eleAction.addContent(SoapUtil.getElementNew("SCR_ID", scrId));
-		eleAction.addContent(SoapUtil.getElementNew("WRK_TYP", wrkTyp));
-		eleAction.addContent(SoapUtil.getElementNew("COMPT_ADDR", comptAddr));
+		eleAction.addContent(SoapUtil.getElement("STD_DT", stdDt));
+		eleAction.addContent(SoapUtil.getElement("SAL_UT_CD", salUtCd));
+		eleAction.addContent(SoapUtil.getElement("PROD_CD", prodCd));
+		eleAction.addContent(SoapUtil.getElement("FLD_NM", fldNm));
+		eleAction.addContent(SoapUtil.getElement("EMPNO", empNo));
+		eleAction.addContent(SoapUtil.getElement("SCR_ID", scrId));
+		eleAction.addContent(SoapUtil.getElement("WRK_TYP", wrkTyp));
+		eleAction.addContent(SoapUtil.getElement("COMPT_ADDR", comptAddr));
 
 		// EAI 통신
 		Map<String, Object> resString = SoapUtil.sendSoapServerMap(fldSiteQTYDTLProcess, SoapUtil.getSoapXmlString( eleAction ));
 
 		// EAI 통신 결과 String 변환
-		String apiResult = super.xmlMapToStringNew(resString);
+		String apiResult = super.xmlMapToString(resString);
 
 		apiResult = apiResult.substring(1);
 		String[] rows = apiResult.split("\n");
@@ -678,34 +685,42 @@ public class JmaService extends XmlBaseService{
 				Map<String, Object> data = new HashMap<String, Object>();
 
     			int co = 0;
-                data.put("FWRD_REQNO", row[co]);
-                data.put("FWRD_REQ_DT", row[co++]);
-                data.put("SAL_SAL_UT_CD", row[co++]);
-                data.put("SAL_SAL_UT_NM", row[co++]);
-                data.put("FLD_SITE_CD", row[co++]);
-                data.put("FLD_NM", row[co++]);
-                data.put("PROD_CD", row[co++]);
-                data.put("PROD_NM", row[co++]);
-                data.put("SAL_FORM_CD", row[co++]);
-                data.put("SAL_FORM_NM", row[co++]);
-                data.put("FWRD_FACT_CD", row[co++]);
-                data.put("FWRD_FACT_NM", row[co++]);
-                data.put("SAL_FG_CD", row[co++]);
-                data.put("SAL_FG_NM", row[co++]);
-                data.put("PREFWRD_SAL_DT", row[co++]);
-                data.put("TRSP_MEAN_CD", row[co++]);
-                data.put("TRSP_MEAN_NM", row[co++]);
-                data.put("DLIVY_PLC_CD", row[co++]);
-                data.put("DLIVY_PLC_NM", row[co++]);
-                data.put("TRSPCOM_CD", row[co++]);
-                data.put("TRSPCOM_NM", row[co++]);
-                data.put("FWRD_REQTY", row[co++]);
-                data.put("FWRD_REQ_UTPRI", row[co++]);
-                data.put("FWRD_REQ_AMT", row[co++]);
-                data.put("DLIVY_STAT_CD", row[co++]);
-                data.put("DLIVY_STAT_NM", row[co++]);
-                data.put("REMAIN_QTY", row[co++]);
-                data.put("FWRD_QTY", row[co++]);
+    			data.put("FWRD_REQNO"         , row[co++]);	// 출하 의뢰번호
+				data.put("FWRD_REQ_DT"        , row[co++]); // 출하 의뢰 일자
+				data.put("OLD_FWRD_REQ_DT"    , row[co++]); // 이전 출하 의뢰 일자
+				data.put("SAL_SAL_UT_CD"      , row[co++]); // 판매 영업 단위 코드
+				data.put("SAL_SAL_UT_NM"      , row[co++]); // 판매 영업 단위 명
+				data.put("FLD_SITE_CD"        , row[co++]); // 현장 사이트 코드
+				data.put("FLD_NM"             , row[co++]); // 현장 명
+				data.put("PROD_CD"            , row[co++]); // 제품 코드
+				data.put("PROD_NM"            , row[co++]); // 제품 명
+				data.put("SAL_FORM_CD"        , row[co++]); // 판매 형태 코드
+				data.put("SAL_FORM_NM"        , row[co++]); // 판매 형태 명
+				data.put("FWRD_FACT_CD"       , row[co++]); // 출하 공장 코드
+				data.put("FWRD_FACT_NM"       , row[co++]); // 출하 공장 명
+				data.put("FWRD_FG_CD"         , row[co++]); // 출하 구분 코드
+				data.put("FWRD_FG_NM"         , row[co++]); // 출하 구분 명
+				data.put("SAL_FG_CD"          , row[co++]); // 판매 구분 코드
+				data.put("SAL_FG_NM"          , row[co++]); // 판매 구분 명
+				data.put("PREFWRD_SAL_DT"     , row[co++]); // 선출하 판매 일자
+				data.put("TRSP_MEAN_CD"       , row[co++]); // 인도 조건 코드
+                data.put("TRSP_MEAN_NM"       , row[co++]); // 인도 조건 명
+				data.put("DLIVY_PLC_CD"       , row[co++]); // 인도 장소 코드
+				data.put("DLIVY_PLC_NM"       , row[co++]); // 인도 장소 명
+				data.put("TRSPCOM_CD"         , row[co++]); // 수송사 코드
+				data.put("TRSPCOM_NM"         , row[co++]); // 수송서 명
+				data.put("FWRD_REQTY"         , row[co++]); // 출하 의뢰량
+				data.put("OLD_FWRD_REQTY"     , row[co++]); // 이전 출하 의뢰량
+				data.put("FWRD_REQ_UTPRI"     , row[co++]); // 출하 의뢰 단가
+				data.put("FWRD_REQ_AMT"       , row[co++]); // 출하 의뢰 금액
+				data.put("OLD_FWRD_REQ_AMT"   , row[co++]); // 이전 출하 의뢰 금액
+				data.put("DLIVY_STAT_CD"      , row[co++]); // 출고 상태 코드
+				data.put("DLIVY_STAT_NM"      , row[co++]); // 출고 상태 명
+				data.put("APPRV_YN"           , row[co++]); // 승인 여부
+				data.put("TAX_BILL_PUB_YN"    , row[co++]); // 세금계산서 발행 여부
+				data.put("REMAIN_QTY"         , row[co++]); // 잔량
+				data.put("FWRD_QTY"           , row[co++]); // 출하 량
+				data.put("FLAG"               , row[co++]); // 처리FLAG
     			list.add(data);
 			}
 		}
@@ -745,22 +760,22 @@ public class JmaService extends XmlBaseService{
 			throw new ValidationException(Constants.EMPNO);
 		}
 
-		Element eleAction = new Element("clientRequestwithReturn");
-		eleAction.addContent(SoapUtil.getElementNew("FWRD_REQNO", fwrdReqno));
-		eleAction.addContent(SoapUtil.getElementNew("FWRD_REQ_DT", fwrdReqDt));
-		eleAction.addContent(SoapUtil.getElementNew("PREFWRD_SAL_DT", prefwrdSalDt));
-		eleAction.addContent(SoapUtil.getElementNew("FWRD_REQTY", fwrdReqty));
-		eleAction.addContent(SoapUtil.getElementNew("FWRD_REQ_UTPRI", fwrdReqUtpri));
-		eleAction.addContent(SoapUtil.getElementNew("FLAG", flag));
-		eleAction.addContent(SoapUtil.getElementNew("EMPNO", empNo));
-		//eleAction.addContent(SoapUtil.getElementNew("SCR_ID", scrId));
-		//eleAction.addContent(SoapUtil.getElementNew("WRK_TYP", wrkTyp));
-		eleAction.addContent(SoapUtil.getElementNew("COMPT_ADDR", comptAddr));
+		Element eleAction = new Element(Constants.CLIENT_REQUEST, "http://www.openuri.org/");
+		eleAction.addContent(SoapUtil.getElement("FWRD_REQNO", fwrdReqno));
+		eleAction.addContent(SoapUtil.getElement("FWRD_REQ_DT", fwrdReqDt));
+		eleAction.addContent(SoapUtil.getElement("PREFWRD_SAL_DT", prefwrdSalDt));
+		eleAction.addContent(SoapUtil.getElement("FWRD_REQTY", fwrdReqty));
+		eleAction.addContent(SoapUtil.getElement("FWRD_REQ_UTPRI", fwrdReqUtpri));
+		eleAction.addContent(SoapUtil.getElement("FLAG", flag));
+		eleAction.addContent(SoapUtil.getElement("EMPNO", empNo));
+		//eleAction.addContent(SoapUtil.getElement("SCR_ID", scrId));
+		//eleAction.addContent(SoapUtil.getElement("WRK_TYP", wrkTyp));
+		eleAction.addContent(SoapUtil.getElement("COMPT_ADDR", comptAddr));
 
 		// EAI 통신
-		Map<String, Object> resString = SoapUtil.sendSoapServerMapNew("dummyURL", fwrdREQEXCUTEProcess, SoapUtil.getSoapXmlStringNew(eleAction, fwrdREQEXCUTEProcess));
+		Map<String, Object> resString = SoapUtil.sendSoapServerMap(fwrdREQEXCUTEProcess, SoapUtil.getSoapXmlString( eleAction ));
 
-		String apiResult = super.xmlMapToStringNew(resString);
+		String apiResult = super.xmlMapToString(resString);
 
 		String rtnFG = apiResult.substring(0,1);
         apiResult    = apiResult.substring(1);
@@ -821,22 +836,22 @@ public class JmaService extends XmlBaseService{
 			throw new ValidationException(Constants.FWRD_DT);
 		}
 
-		Element eleAction = new Element("clientRequestwithReturn");
-		eleAction.addContent(SoapUtil.getElementNew("FWRD_DT", fwrdDt));
-		eleAction.addContent(SoapUtil.getElementNew("PROD_FG", prodFg));
-		eleAction.addContent(SoapUtil.getElementNew("EMPNO", empNo));
-		eleAction.addContent(SoapUtil.getElementNew("SCR_ID", scrId));
-		eleAction.addContent(SoapUtil.getElementNew("WRK_TYP", wrkTyp));
-		eleAction.addContent(SoapUtil.getElementNew("COMPT_ADDR", comptAddr));
+		Element eleAction = new Element(Constants.CLIENT_REQUEST, "http://www.openuri.org/");
+		eleAction.addContent(SoapUtil.getElement("FWRD_DT", fwrdDt));
+		eleAction.addContent(SoapUtil.getElement("PROD_FG", prodFg));
+		eleAction.addContent(SoapUtil.getElement("EMPNO", empNo));
+		eleAction.addContent(SoapUtil.getElement("SCR_ID", scrId));
+		eleAction.addContent(SoapUtil.getElement("WRK_TYP", wrkTyp));
+		eleAction.addContent(SoapUtil.getElement("COMPT_ADDR", comptAddr));
 
 		// EAI 통신
-		Map<String, Object> resString = SoapUtil.sendSoapServerMapNew("dummbyUrl", fwrdSTOCKALLProcess, SoapUtil.getSoapXmlStringNew(eleAction, fwrdSTOCKALLProcess));
+		Map<String, Object> resString = SoapUtil.sendSoapServerMap(fwrdSTOCKALLProcess, SoapUtil.getSoapXmlString( eleAction ));
 
 		// EAI 통신 결과 String 변환
-		String apiResult = super.xmlMapToStringNew(resString);
+		String apiResult = super.xmlMapToString(resString);
 
 		apiResult = apiResult.substring(1);
-		String[] rows = apiResult.substring(apiResult.indexOf("||") + 2).split("\n");
+		String[] rows = apiResult.split("\n");
 		logger.debug("rows length : " + rows.length);
 
 		for (int i = 0; i < rows.length; ++i) {
@@ -894,23 +909,23 @@ public class JmaService extends XmlBaseService{
 			throw new ValidationException(Constants.FWRD_DT);
 		}
 
-		Element eleAction = new Element("clientRequestwithReturn");
-		eleAction.addContent(SoapUtil.getElementNew("FWRD_DT", fwrdDt));
-		eleAction.addContent(SoapUtil.getElementNew("PROD_FG", prodFg));
-		eleAction.addContent(SoapUtil.getElementNew("FACT_CD", factCd));
-		eleAction.addContent(SoapUtil.getElementNew("EMPNO", empNo));
-		eleAction.addContent(SoapUtil.getElementNew("SCR_ID", scrId));
-		eleAction.addContent(SoapUtil.getElementNew("WRK_TYP", wrkTyp));
-		eleAction.addContent(SoapUtil.getElementNew("COMPT_ADDR", comptAddr));
+		Element eleAction = new Element(Constants.CLIENT_REQUEST, "http://www.openuri.org/");
+		eleAction.addContent(SoapUtil.getElement("FWRD_DT", fwrdDt));
+		eleAction.addContent(SoapUtil.getElement("PROD_FG", prodFg));
+		eleAction.addContent(SoapUtil.getElement("FACT_CD", factCd));
+		eleAction.addContent(SoapUtil.getElement("EMPNO", empNo));
+		eleAction.addContent(SoapUtil.getElement("SCR_ID", scrId));
+		eleAction.addContent(SoapUtil.getElement("WRK_TYP", wrkTyp));
+		eleAction.addContent(SoapUtil.getElement("COMPT_ADDR", comptAddr));
 
 		// EAI 통신
-		Map<String, Object> resString = SoapUtil.sendSoapServerMapNew("dummyURL", fwrdSTOCK1Process, SoapUtil.getSoapXmlStringNew(eleAction, fwrdSTOCK1Process));
+		Map<String, Object> resString = SoapUtil.sendSoapServerMap(fwrdSTOCK1Process, SoapUtil.getSoapXmlString( eleAction ));
 
 		// EAI 통신 결과 String 변환
-		String apiResult = super.xmlMapToStringNew(resString);
+		String apiResult = super.xmlMapToString(resString);
 
 		apiResult = apiResult.substring(1);
-		String[] rows = apiResult.substring(apiResult.indexOf("||") + 2).split("\n");
+		String[] rows = apiResult.split("\n");
 
 		for (int i = 0; i < rows.length; ++i) {
 			if (!CommonUtils.isExist(rows[i])) {
@@ -970,23 +985,23 @@ public class JmaService extends XmlBaseService{
 
 		String action = Constants.CLIENT_REQUEST;
 
-		Element eleAction = new Element(action);
-		eleAction.addContent(SoapUtil.getElementNew("FWRD_DT", fwrdDt));
-		eleAction.addContent(SoapUtil.getElementNew("PROD_FG", prodFg));
-		eleAction.addContent(SoapUtil.getElementNew("FACT_CD", factCd));
-		eleAction.addContent(SoapUtil.getElementNew("EMPNO", empNo));
-		eleAction.addContent(SoapUtil.getElementNew("SCR_ID", scrId));
-		eleAction.addContent(SoapUtil.getElementNew("WRK_TYP", wrkTyp));
-		eleAction.addContent(SoapUtil.getElementNew("COMPT_ADDR", comptAddr));
+		Element eleAction = new Element(action, "http://www.openuri.org/");
+		eleAction.addContent(SoapUtil.getElement("FWRD_DT", fwrdDt));
+		eleAction.addContent(SoapUtil.getElement("PROD_FG", prodFg));
+		eleAction.addContent(SoapUtil.getElement("FACT_CD", factCd));
+		eleAction.addContent(SoapUtil.getElement("EMPNO", empNo));
+		eleAction.addContent(SoapUtil.getElement("SCR_ID", scrId));
+		eleAction.addContent(SoapUtil.getElement("WRK_TYP", wrkTyp));
+		eleAction.addContent(SoapUtil.getElement("COMPT_ADDR", comptAddr));
 
 		// EAI 통신
-		Map<String, Object> resString = SoapUtil.sendSoapServerMapNew("dummyUrl", fwrdSTOCK2Process, SoapUtil.getSoapXmlStringNew(eleAction, fwrdSTOCK2Process));
+		Map<String, Object> resString = SoapUtil.sendSoapServerMap(fwrdSTOCK2Process, SoapUtil.getSoapXmlString( eleAction ));
 
 		// EAI 통신 결과 String 변환
-		String apiResult = super.xmlMapToStringNew(resString);
+		String apiResult = super.xmlMapToString(resString);
 
 		apiResult = apiResult.substring(1);
-		String[] rows = apiResult.substring(apiResult.indexOf("||") + 2).split("\n");
+		String[] rows = apiResult.split("\n");
 
 		for (int i = 0; i < rows.length; ++i) {
 			if (!CommonUtils.isExist(rows[i])) {
@@ -1058,101 +1073,25 @@ public class JmaService extends XmlBaseService{
 		apiResult = apiResult.substring(1);
 		String[] rows = apiResult.substring(apiResult.indexOf("||") + 2).split("\n");
 
-        for(int i = 0; i < rows.length; ++i) {
-            if (!CommonUtils.isExist(rows[i])) {
-               this.logger.debug("Skip empty row : " + i);
-            } else {
-               String[] row;
-               HashMap data;
-               String tbGbn;
-               int var22;
-               label73: {
-                  row = rows[i].split("\\|\\|", -1);
-                  data = new HashMap();
-                  int co = 0;
-                  String tmGbn = "";
-                  var22 = co + 1;
-                  String time = row[co];
-                  tbGbn = "";
-                  switch(time.hashCode()) {
-                  case 1537:
-                     if (time.equals("01")) {
-                        tbGbn = "6시 이전";
-                        break label73;
-                     }
-                     break;
-                  case 1538:
-                     if (time.equals("02")) {
-                        tbGbn = "~8시";
-                        break label73;
-                     }
-                     break;
-                  case 1539:
-                     if (time.equals("03")) {
-                        tbGbn = "~10시";
-                        break label73;
-                     }
-                     break;
-                  case 1540:
-                     if (time.equals("04")) {
-                        tbGbn = "~12시";
-                        break label73;
-                     }
-                     break;
-                  case 1541:
-                     if (time.equals("05")) {
-                        tbGbn = "~13시";
-                        break label73;
-                     }
-                     break;
-                  case 1542:
-                     if (time.equals("06")) {
-                        tbGbn = "~14시";
-                        break label73;
-                     }
-                     break;
-                  case 1543:
-                     if (time.equals("07")) {
-                        tbGbn = "~15시";
-                        break label73;
-                     }
-                     break;
-                  case 1544:
-                     if (time.equals("08")) {
-                        tbGbn = "~16시";
-                        break label73;
-                     }
-                     break;
-                  case 1545:
-                     if (time.equals("09")) {
-                        tbGbn = "~17시";
-                        break label73;
-                     }
-                     break;
-                  case 1567:
-                     if (time.equals("10")) {
-                        tbGbn = "~18시";
-                        break label73;
-                     }
-                     break;
-                  case 1568:
-                     if (time.equals("11")) {
-                        tbGbn = "18시 이후";
-                        break label73;
-                     }
-                  }
+		for (int i = 0; i < rows.length; ++i) {
+			if (!CommonUtils.isExist(rows[i])) {
+					logger.debug("Skip empty row : " + i);
+			}else{
 
-                  tbGbn = "기타";
-               }
+				String[] row = rows[i].split("\\|\\|", -1);
+				Map<String, Object> data = new HashMap<String, Object>();
 
-               data.put("TM_GBN", tbGbn);
-               data.put("NOW_QTY", row[var22++]);
-               data.put("NOW_RAT", row[var22++]);
-               data.put("ACC_NOW_QTY", row[var22++]);
-               data.put("YESTER_RAT", row[var22++]);
-               list.add(data);
-            }
-         }
+    			int co = 0;
+    			data.put("TM_FG"		, row[co++]);	// 시간
+    			data.put("TM_GBN"		, row[co++]);
+    			data.put("NOW_QTY"      , row[co++]);	// 일
+    			data.put("NOW_RAT"      , row[co++]);	// 증감(전일)
+    			data.put("ACC_NOW_QTY"  , row[co++]);	// 누적
+    			data.put("YESTER_RAT"   , row[co++]);	// 증감(전일)
+    			list.add(data);
+			}
+		}
+
 		apiResponse.putBody("result", list);
 		return apiResponse;
 	}
@@ -1184,7 +1123,7 @@ public class JmaService extends XmlBaseService{
 			throw new ValidationException(Constants.FWRD_DT);
 		}
 
-		Element eleAction = new Element(Constants.CLIENT_REQUEST);
+		Element eleAction = new Element(Constants.CLIENT_REQUEST, "http://www.openuri.org/");
 		eleAction.addContent(SoapUtil.getElementNew("FWRD_DT", fwrdDt));
 		eleAction.addContent(SoapUtil.getElementNew("FACT_CD", factCd));
 		eleAction.addContent(SoapUtil.getElementNew("EMPNO", empNo));
@@ -1195,6 +1134,7 @@ public class JmaService extends XmlBaseService{
 		// EAI 통신
 		//Map<String, Object> resString = SoapUtil.sendSoapServerMap(hmatSTOCKProcess, SoapUtil.getSoapXmlString( eleAction ));
 		
+		String url = "SSYCNE_JMA_01.JMA_036.ws:JMA_036_P";
 		// EAI 통신
 		Map<String, Object> resString = SoapUtil.sendSoapServerMapNew("dummyUrl",hmatSTOCKProcess, SoapUtil.getSoapXmlStringNew( eleAction,hmatSTOCKProcess ));
 		
@@ -1203,7 +1143,7 @@ public class JmaService extends XmlBaseService{
 		String apiResult = super.xmlMapToStringNew(resString);
 
 		apiResult = apiResult.substring(1);
-		String[] rows = apiResult.substring(apiResult.indexOf("||") + 2).split("\n");
+		String[] rows = apiResult.split("\n");
 
 		for (int i = 0; i < rows.length; ++i) {
 			if (!CommonUtils.isExist(rows[i])) {
@@ -1250,20 +1190,20 @@ public class JmaService extends XmlBaseService{
 			throw new ValidationException(Constants.EMPNO);
 		}
 
-		Element eleAction = new Element("clientRequestwithReturn");
-		eleAction.addContent(SoapUtil.getElementNew("EMPNO", empNo));
-		eleAction.addContent(SoapUtil.getElementNew("SCR_ID", scrId));
-		eleAction.addContent(SoapUtil.getElementNew("WRK_TYP", wrkTyp));
-		eleAction.addContent(SoapUtil.getElementNew("COMPT_ADDR", comptAddr));
+		Element eleAction = new Element(Constants.CLIENT_REQUEST, "http://www.openuri.org/");
+		eleAction.addContent(SoapUtil.getElement("EMPNO", empNo));
+		eleAction.addContent(SoapUtil.getElement("SCR_ID", scrId));
+		eleAction.addContent(SoapUtil.getElement("WRK_TYP", wrkTyp));
+		eleAction.addContent(SoapUtil.getElement("COMPT_ADDR", comptAddr));
 
 		// EAI 통신
-		Map<String, Object> resString = SoapUtil.sendSoapServerMapNew("dummyUrl", authProcess, SoapUtil.getSoapXmlStringNew(eleAction, authProcess));
+		Map<String, Object> resString = SoapUtil.sendSoapServerMap(authProcess, SoapUtil.getSoapXmlString( eleAction ));
 
 		// EAI 통신 결과 String 변환
-		String apiResult = super.xmlMapToStringNew(resString);
+		String apiResult = super.xmlMapToString(resString);
 
 		apiResult = apiResult.substring(1);
-		String[] rows = apiResult.substring(apiResult.indexOf("||") + 2).split("\n");
+		String[] rows = apiResult.split("\n");
 
 		for (int i = 0; i < rows.length; ++i) {
 			if (!CommonUtils.isExist(rows[i])) {
@@ -1318,24 +1258,24 @@ public class JmaService extends XmlBaseService{
 		
 		
 
-		Element eleAction = new Element("clientRequestwithReturn");
-		eleAction.addContent(SoapUtil.getElementNew("NAME", name));
-		eleAction.addContent(SoapUtil.getElementNew("FG", fg));
-		eleAction.addContent(SoapUtil.getElementNew("OPTION", option));
-		eleAction.addContent(SoapUtil.getElementNew("EMPNO", empNo));
-		eleAction.addContent(SoapUtil.getElementNew("SCR_ID", scrId));
-		eleAction.addContent(SoapUtil.getElementNew("WRK_TYP", wrkTyp));
-		eleAction.addContent(SoapUtil.getElementNew("COMPT_ADDR", comptAddr));
-		eleAction.addContent(SoapUtil.getElementNew("UZR_IP", uzrIp));
+		Element eleAction = new Element(Constants.CLIENT_REQUEST, "http://www.openuri.org/");
+		eleAction.addContent(SoapUtil.getElement("NAME", name));
+		eleAction.addContent(SoapUtil.getElement("FG", fg));
+		eleAction.addContent(SoapUtil.getElement("OPTION", option));
+		eleAction.addContent(SoapUtil.getElement("EMPNO", empNo));
+		eleAction.addContent(SoapUtil.getElement("SCR_ID", scrId));
+		eleAction.addContent(SoapUtil.getElement("WRK_TYP", wrkTyp));
+		eleAction.addContent(SoapUtil.getElement("COMPT_ADDR", comptAddr));
+		eleAction.addContent(SoapUtil.getElement("UZR_IP", uzrIp));
 
 		// EAI 통신
-		Map<String, Object> resString = SoapUtil.sendSoapServerMapNew("dummyUrl", commonCode, SoapUtil.getSoapXmlStringNew(eleAction, commonCode));
+		Map<String, Object> resString = SoapUtil.sendSoapServerMap(commonCode, SoapUtil.getSoapXmlString( eleAction ));
 		
 		// EAI 통신 결과 String 변환
-		String apiResult = super.xmlMapToStringNew(resString);
+		String apiResult = super.xmlMapToString(resString);
 
 		apiResult = apiResult.substring(1);
-		String[] rows = apiResult.substring(apiResult.indexOf("||") + 2).split("\n");
+		String[] rows = apiResult.split("\n");
 
 		for (int i = 0; i < rows.length; ++i) {
 			if (!CommonUtils.isExist(rows[i])) {
@@ -1388,19 +1328,19 @@ public class JmaService extends XmlBaseService{
 		}
 
 		Element eleAction = new Element(Constants.CLIENT_REQUEST, "http://www.openuri.org/");
-		eleAction.addContent(SoapUtil.getElementNew("RCPT_DT", rcptDt));
-		eleAction.addContent(SoapUtil.getElementNew("SAL_UT_CD", salUtCd));
-		eleAction.addContent(SoapUtil.getElementNew("CUST_NM", custNm));
-		eleAction.addContent(SoapUtil.getElementNew("EMPNO", empNo));
-		eleAction.addContent(SoapUtil.getElementNew("SCR_ID", scrId));
-		eleAction.addContent(SoapUtil.getElementNew("WRK_TYP", wrkTyp));
-		eleAction.addContent(SoapUtil.getElementNew("COMPT_ADDR", comptAddr));
+		eleAction.addContent(SoapUtil.getElement("RCPT_DT", rcptDt));
+		eleAction.addContent(SoapUtil.getElement("SAL_UT_CD", salUtCd));
+		eleAction.addContent(SoapUtil.getElement("CUST_NM", custNm));
+		eleAction.addContent(SoapUtil.getElement("EMPNO", empNo));
+		eleAction.addContent(SoapUtil.getElement("SCR_ID", scrId));
+		eleAction.addContent(SoapUtil.getElement("WRK_TYP", wrkTyp));
+		eleAction.addContent(SoapUtil.getElement("COMPT_ADDR", comptAddr));
 
 		// EAI 통신
 		Map<String, Object> resString = SoapUtil.sendSoapServerMap(rcptListProcess, SoapUtil.getSoapXmlString( eleAction ));
 
 		// EAI 통신 결과 String 변환
-		String apiResult = super.xmlMapToStringNew(resString);
+		String apiResult = super.xmlMapToString(resString);
 
 
 		apiResult = apiResult.substring(1);
@@ -1461,17 +1401,17 @@ public class JmaService extends XmlBaseService{
 		}
 
 		Element eleAction = new Element(Constants.CLIENT_REQUEST, "http://www.openuri.org/");
-		eleAction.addContent(SoapUtil.getElementNew("RCPT_NO", rcptno));
-		eleAction.addContent(SoapUtil.getElementNew("EMPNO", empNo));
-		eleAction.addContent(SoapUtil.getElementNew("SCR_ID", scrId));
-		eleAction.addContent(SoapUtil.getElementNew("WRK_TYP", wrkTyp));
-		eleAction.addContent(SoapUtil.getElementNew("COMPT_ADDR", comptAddr));
+		eleAction.addContent(SoapUtil.getElement("RCPT_NO", rcptno));
+		eleAction.addContent(SoapUtil.getElement("EMPNO", empNo));
+		eleAction.addContent(SoapUtil.getElement("SCR_ID", scrId));
+		eleAction.addContent(SoapUtil.getElement("WRK_TYP", wrkTyp));
+		eleAction.addContent(SoapUtil.getElement("COMPT_ADDR", comptAddr));
 
 		// EAI 통신
 		Map<String, Object> resString = SoapUtil.sendSoapServerMap(rcptListDtlProcess, SoapUtil.getSoapXmlString( eleAction ));
 
 		// EAI 통신 결과 String 변환
-		String apiResult = super.xmlMapToStringNew(resString);
+		String apiResult = super.xmlMapToString(resString);
 
 		apiResult = apiResult.substring(1);
 		String[] rows = apiResult.split("\n");
@@ -1580,25 +1520,25 @@ public class JmaService extends XmlBaseService{
 		}
 
 		Element eleAction = new Element(Constants.CLIENT_REQUEST, "http://www.openuri.org/");
-		eleAction.addContent(SoapUtil.getElementNew("RCPT_NO", rcptNo));
-		eleAction.addContent(SoapUtil.getElementNew("RCPT_DT", rcptDt));
-		eleAction.addContent(SoapUtil.getElementNew("RCPT_AMT", rcptAmt));
-		eleAction.addContent(SoapUtil.getElementNew("NOTE_SERNO", noteSerno));
-		eleAction.addContent(SoapUtil.getElementNew("BANK_CD", bankCd));
-		eleAction.addContent(SoapUtil.getElementNew("ACCT_NO", acctNo));
-		eleAction.addContent(SoapUtil.getElementNew("CMS_KEY", cmsKey));
-		eleAction.addContent(SoapUtil.getElementNew("VRTL_ACCT_NO", vrtlAcctNo));
-		eleAction.addContent(SoapUtil.getElementNew("RCPTBL_NO", rcptblNo));
-		eleAction.addContent(SoapUtil.getElementNew("FLAG", flag));
-		eleAction.addContent(SoapUtil.getElementNew("EMPNO", empNo));
-		//eleAction.addContent(SoapUtil.getElementNew("SCR_ID", scrId));
-		//eleAction.addContent(SoapUtil.getElementNew("WRK_TYP", wrkTyp));
-		eleAction.addContent(SoapUtil.getElementNew("COMPT_ADDR", comptAddr));
+		eleAction.addContent(SoapUtil.getElement("RCPT_NO", rcptNo));
+		eleAction.addContent(SoapUtil.getElement("RCPT_DT", rcptDt));
+		eleAction.addContent(SoapUtil.getElement("RCPT_AMT", rcptAmt));
+		eleAction.addContent(SoapUtil.getElement("NOTE_SERNO", noteSerno));
+		eleAction.addContent(SoapUtil.getElement("BANK_CD", bankCd));
+		eleAction.addContent(SoapUtil.getElement("ACCT_NO", acctNo));
+		eleAction.addContent(SoapUtil.getElement("CMS_KEY", cmsKey));
+		eleAction.addContent(SoapUtil.getElement("VRTL_ACCT_NO", vrtlAcctNo));
+		eleAction.addContent(SoapUtil.getElement("RCPTBL_NO", rcptblNo));
+		eleAction.addContent(SoapUtil.getElement("FLAG", flag));
+		eleAction.addContent(SoapUtil.getElement("EMPNO", empNo));
+		//eleAction.addContent(SoapUtil.getElement("SCR_ID", scrId));
+		//eleAction.addContent(SoapUtil.getElement("WRK_TYP", wrkTyp));
+		eleAction.addContent(SoapUtil.getElement("COMPT_ADDR", comptAddr));
 
 		// EAI 통신
 		Map<String, Object> resString = SoapUtil.sendSoapServerMap(rcptListEXCUTElProcess, SoapUtil.getSoapXmlString( eleAction ));
 
-		String apiResult = super.xmlMapToStringNew(resString);
+		String apiResult = super.xmlMapToString(resString);
 
 		String rtnFG = apiResult.substring(0,1);
         apiResult    = apiResult.substring(1);
@@ -1655,17 +1595,17 @@ public class JmaService extends XmlBaseService{
 		}
 
 		Element eleAction = new Element(Constants.CLIENT_REQUEST, "http://www.openuri.org/");
-		eleAction.addContent(SoapUtil.getElementNew("FLD_SITE_CD", fldSiteCd));
-		eleAction.addContent(SoapUtil.getElementNew("EMPNO", empNo));
-		eleAction.addContent(SoapUtil.getElementNew("SCR_ID", scrId));
-		eleAction.addContent(SoapUtil.getElementNew("WRK_TYP", wrkTyp));
-		eleAction.addContent(SoapUtil.getElementNew("COMPT_ADDR", comptAddr));
+		eleAction.addContent(SoapUtil.getElement("FLD_SITE_CD", fldSiteCd));
+		eleAction.addContent(SoapUtil.getElement("EMPNO", empNo));
+		eleAction.addContent(SoapUtil.getElement("SCR_ID", scrId));
+		eleAction.addContent(SoapUtil.getElement("WRK_TYP", wrkTyp));
+		eleAction.addContent(SoapUtil.getElement("COMPT_ADDR", comptAddr));
 
 		// EAI 통신
 		Map<String, Object> resString = SoapUtil.sendSoapServerMap(noteNoListProcess, SoapUtil.getSoapXmlString( eleAction ));
 
 		// EAI 통신 결과 String 변환
-		String apiResult = super.xmlMapToStringNew(resString);
+		String apiResult = super.xmlMapToString(resString);
 
 
 		apiResult = apiResult.substring(1);
@@ -1726,17 +1666,17 @@ public class JmaService extends XmlBaseService{
 		}
 
 		Element eleAction = new Element(Constants.CLIENT_REQUEST, "http://www.openuri.org/");
-		eleAction.addContent(SoapUtil.getElementNew("RCPT_DT", rcptDt));
-		eleAction.addContent(SoapUtil.getElementNew("EMPNO", empNo));
-		eleAction.addContent(SoapUtil.getElementNew("SCR_ID", scrId));
-		eleAction.addContent(SoapUtil.getElementNew("WRK_TYP", wrkTyp));
-		eleAction.addContent(SoapUtil.getElementNew("COMPT_ADDR", comptAddr));
+		eleAction.addContent(SoapUtil.getElement("RCPT_DT", rcptDt));
+		eleAction.addContent(SoapUtil.getElement("EMPNO", empNo));
+		eleAction.addContent(SoapUtil.getElement("SCR_ID", scrId));
+		eleAction.addContent(SoapUtil.getElement("WRK_TYP", wrkTyp));
+		eleAction.addContent(SoapUtil.getElement("COMPT_ADDR", comptAddr));
 
 		// EAI 통신
 		Map<String, Object> resString = SoapUtil.sendSoapServerMap(rcptAcctListProcess, SoapUtil.getSoapXmlString( eleAction ));
 
 		// EAI 통신 결과 String 변환
-		String apiResult = super.xmlMapToStringNew(resString);
+		String apiResult = super.xmlMapToString(resString);
 
 
 		apiResult = apiResult.substring(1);
@@ -1790,18 +1730,18 @@ public class JmaService extends XmlBaseService{
 		}
 
 		Element eleAction = new Element(Constants.CLIENT_REQUEST, "http://www.openuri.org/");
-		eleAction.addContent(SoapUtil.getElementNew("RCPT_DT", rcptDt));
-		eleAction.addContent(SoapUtil.getElementNew("VRTL_ACCT_NO", vrtlAcctNo));
-		eleAction.addContent(SoapUtil.getElementNew("EMPNO", empNo));
-		eleAction.addContent(SoapUtil.getElementNew("SCR_ID", scrId));
-		eleAction.addContent(SoapUtil.getElementNew("WRK_TYP", wrkTyp));
-		eleAction.addContent(SoapUtil.getElementNew("COMPT_ADDR", comptAddr));
+		eleAction.addContent(SoapUtil.getElement("RCPT_DT", rcptDt));
+		eleAction.addContent(SoapUtil.getElement("VRTL_ACCT_NO", vrtlAcctNo));
+		eleAction.addContent(SoapUtil.getElement("EMPNO", empNo));
+		eleAction.addContent(SoapUtil.getElement("SCR_ID", scrId));
+		eleAction.addContent(SoapUtil.getElement("WRK_TYP", wrkTyp));
+		eleAction.addContent(SoapUtil.getElement("COMPT_ADDR", comptAddr));
 
 		// EAI 통신
 		Map<String, Object> resString = SoapUtil.sendSoapServerMap(vrtlAcctNoListProcess, SoapUtil.getSoapXmlString( eleAction ));
 
 		// EAI 통신 결과 String 변환
-		String apiResult = super.xmlMapToStringNew(resString);
+		String apiResult = super.xmlMapToString(resString);
 
 
 		apiResult = apiResult.substring(1);
@@ -1880,6 +1820,7 @@ public class JmaService extends XmlBaseService{
 		eleAction.addContent(SoapUtil.getElementNew("WRK_TYP", wrkTyp));
 		eleAction.addContent(SoapUtil.getElementNew("COMPT_ADDR", comptAddr));
 		
+		String url = "SSYCNE_JMA_01.JMA_023.ws:JMA_023_P";
 		// EAI 통신
 		//Map<String, Object> resString = SoapUtil.sendSoapServerMap(asgnListProcess, SoapUtil.getSoapXmlString( eleAction ));
 		Map<String, Object> resString = SoapUtil.sendSoapServerMapNew("dummyUrl",asgnListProcess, SoapUtil.getSoapXmlStringNew( eleAction,asgnListProcess ));
@@ -2025,6 +1966,7 @@ public class JmaService extends XmlBaseService{
 		eleAction.addContent(SoapUtil.getElementNew("WRK_TYP", wrkTyp));
 		eleAction.addContent(SoapUtil.getElementNew("COMPT_ADDR", comptAddr)); 
 		
+		String url = "SSYCNE_JMA_01.JMA_024.ws:JMA_024_P";
 		// EAI 통신
 		Map<String, Object> resString = SoapUtil.sendSoapServerMapNew("dummyUrl",asgnSaveProcess, SoapUtil.getSoapXmlStringNew( eleAction,asgnSaveProcess ));
 
@@ -2298,14 +2240,14 @@ public class JmaService extends XmlBaseService{
 		
 		
 		eleAction.addContent(SoapUtil.getElementNew("EMPNO", empNo));
-		//eleAction.addContent(SoapUtil.getElementNew("SCR_ID", scrId));
-		//eleAction.addContent(SoapUtil.getElementNew("WRK_TYP", wrkTyp));
+		//eleAction.addContent(SoapUtil.getElement("SCR_ID", scrId));
+		//eleAction.addContent(SoapUtil.getElement("WRK_TYP", wrkTyp));
 		eleAction.addContent(SoapUtil.getElementNew("COMPT_ADDR", comptAddr));
 
 		// EAI 통신
 		Map<String, Object> resString = SoapUtil.sendSoapServerMapNew("dummbyUrl",patrolInsertProcess, SoapUtil.getSoapXmlStringNew( eleAction,patrolInsertProcess ));
 
-		String apiResult = super.xmlMapToStringNew(resString);
+		String apiResult = super.xmlMapToString(resString);
 
 		String rtnFG = apiResult.substring(0,1);
         apiResult    = apiResult.substring(1);
@@ -2390,10 +2332,23 @@ public class JmaService extends XmlBaseService{
 		eleAction.addContent(SoapUtil.getElementNew("HAZARD_FG_CD", hazardFgCd));
 		
 		
+		System.out.println("★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★");
+
+		System.out.println("--"+patrolTm);
+		System.out.println("--"+workDesc);
+		System.out.println("--"+hlpComCd);
+		System.out.println("--"+ordDeptCd);
+		System.out.println("--"+hazardDesc);
+		System.out.println("--"+safeRsltCd);
+		System.out.println("--"+hazardFgCd);
+		
+		
+		
+		System.out.println("★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★");
 		
 		eleAction.addContent(SoapUtil.getElementNew("EMPNO", empNo));
-		//eleAction.addContent(SoapUtil.getElementNew("SCR_ID", scrId));
-		//eleAction.addContent(SoapUtil.getElementNew("WRK_TYP", wrkTyp));
+		//eleAction.addContent(SoapUtil.getElement("SCR_ID", scrId));
+		//eleAction.addContent(SoapUtil.getElement("WRK_TYP", wrkTyp));
 		eleAction.addContent(SoapUtil.getElementNew("COMPT_ADDR", comptAddr));
 		eleAction.addContent(SoapUtil.getElementNew("PATROL_NO", patrolNo));
 		
@@ -2651,44 +2606,44 @@ public class JmaService extends XmlBaseService{
 		}
 		
 		Element eleAction = new Element(Constants.CLIENT_REQUEST, "http://www.openuri.org/");
-		eleAction.addContent(SoapUtil.getElementNew("YYMM", yymm));
-		eleAction.addContent(SoapUtil.getElementNew("STOCK_NO", stockNo));
-		eleAction.addContent(SoapUtil.getElementNew("ARRV_DT", arrvDt));
-		eleAction.addContent(SoapUtil.getElementNew("VOYCNT", voycnt));
-		eleAction.addContent(SoapUtil.getElementNew("SUBMAT_CD", submatCd));
-		eleAction.addContent(SoapUtil.getElementNew("DONGH_QTY", donghQty));
-		eleAction.addContent(SoapUtil.getElementNew("YOUNGW_QTY", youngwQty));
-		eleAction.addContent(SoapUtil.getElementNew("QTY", qty));
+		eleAction.addContent(SoapUtil.getElement("YYMM", yymm));
+		eleAction.addContent(SoapUtil.getElement("STOCK_NO", stockNo));
+		eleAction.addContent(SoapUtil.getElement("ARRV_DT", arrvDt));
+		eleAction.addContent(SoapUtil.getElement("VOYCNT", voycnt));
+		eleAction.addContent(SoapUtil.getElement("SUBMAT_CD", submatCd));
+		eleAction.addContent(SoapUtil.getElement("DONGH_QTY", donghQty));
+		eleAction.addContent(SoapUtil.getElement("YOUNGW_QTY", youngwQty));
+		eleAction.addContent(SoapUtil.getElement("QTY", qty));
 		
-		eleAction.addContent(SoapUtil.getElementNew("PROPLC", proplc));
-		eleAction.addContent(SoapUtil.getElementNew("ITM_CD", itmCd));
-		eleAction.addContent(SoapUtil.getElementNew("ITM_SERNO", itmSerno));
-		eleAction.addContent(SoapUtil.getElementNew("WHARK_NO", wharkNo));
-		eleAction.addContent(SoapUtil.getElementNew("BL_MOIST", blMoist));
-		eleAction.addContent(SoapUtil.getElementNew("SURV_MOIST0", survMoist0));
-		eleAction.addContent(SoapUtil.getElementNew("SURV_MOIST", survMoist));
-		eleAction.addContent(SoapUtil.getElementNew("LC_NO1", lcNo1));
-		eleAction.addContent(SoapUtil.getElementNew("LC_NO2", lcNo2));
-		eleAction.addContent(SoapUtil.getElementNew("PRCH_NO1", prchNo1));
-		eleAction.addContent(SoapUtil.getElementNew("PRCH_NO2", prchNo2));
-		eleAction.addContent(SoapUtil.getElementNew("SCA_CLO_YN1", scaCloYn1));
-		eleAction.addContent(SoapUtil.getElementNew("SCA_CLO_YN2", scaCloYn2));
-		eleAction.addContent(SoapUtil.getElementNew("SCAWGT1", scawgt1));
-		eleAction.addContent(SoapUtil.getElementNew("SCAWGT2", scawgt2));
-		eleAction.addContent(SoapUtil.getElementNew("SCAWGT", scawgt));
-		eleAction.addContent(SoapUtil.getElementNew("SCAWGT1_DRY", scawgt1Dry));
-		eleAction.addContent(SoapUtil.getElementNew("SCAWGT2_DRY", scawgt2Dry));
-		eleAction.addContent(SoapUtil.getElementNew("SCAWGT_DRY", scawgtDry));
+		eleAction.addContent(SoapUtil.getElement("PROPLC", proplc));
+		eleAction.addContent(SoapUtil.getElement("ITM_CD", itmCd));
+		eleAction.addContent(SoapUtil.getElement("ITM_SERNO", itmSerno));
+		eleAction.addContent(SoapUtil.getElement("WHARK_NO", wharkNo));
+		eleAction.addContent(SoapUtil.getElement("BL_MOIST", blMoist));
+		eleAction.addContent(SoapUtil.getElement("SURV_MOIST0", survMoist0));
+		eleAction.addContent(SoapUtil.getElement("SURV_MOIST", survMoist));
+		eleAction.addContent(SoapUtil.getElement("LC_NO1", lcNo1));
+		eleAction.addContent(SoapUtil.getElement("LC_NO2", lcNo2));
+		eleAction.addContent(SoapUtil.getElement("PRCH_NO1", prchNo1));
+		eleAction.addContent(SoapUtil.getElement("PRCH_NO2", prchNo2));
+		eleAction.addContent(SoapUtil.getElement("SCA_CLO_YN1", scaCloYn1));
+		eleAction.addContent(SoapUtil.getElement("SCA_CLO_YN2", scaCloYn2));
+		eleAction.addContent(SoapUtil.getElement("SCAWGT1", scawgt1));
+		eleAction.addContent(SoapUtil.getElement("SCAWGT2", scawgt2));
+		eleAction.addContent(SoapUtil.getElement("SCAWGT", scawgt));
+		eleAction.addContent(SoapUtil.getElement("SCAWGT1_DRY", scawgt1Dry));
+		eleAction.addContent(SoapUtil.getElement("SCAWGT2_DRY", scawgt2Dry));
+		eleAction.addContent(SoapUtil.getElement("SCAWGT_DRY", scawgtDry));
 		
-		eleAction.addContent(SoapUtil.getElementNew("EMPNO", empNo));
-		//eleAction.addContent(SoapUtil.getElementNew("SCR_ID", scrId));
-		//eleAction.addContent(SoapUtil.getElementNew("WRK_TYP", wrkTyp));
-		eleAction.addContent(SoapUtil.getElementNew("COMPT_ADDR", comptAddr));
+		eleAction.addContent(SoapUtil.getElement("EMPNO", empNo));
+		//eleAction.addContent(SoapUtil.getElement("SCR_ID", scrId));
+		//eleAction.addContent(SoapUtil.getElement("WRK_TYP", wrkTyp));
+		eleAction.addContent(SoapUtil.getElement("COMPT_ADDR", comptAddr));
 		
 		// EAI 통신
 		Map<String, Object> resString = SoapUtil.sendSoapServerMap(voycntUpdateProcess, SoapUtil.getSoapXmlString( eleAction ));
 		
-		String apiResult = super.xmlMapToStringNew(resString);
+		String apiResult = super.xmlMapToString(resString);
 		
 		String rtnFG = apiResult.substring(0,1);
 		apiResult    = apiResult.substring(1);
@@ -2746,18 +2701,18 @@ public class JmaService extends XmlBaseService{
 		}
 		
 		Element eleAction = new Element(Constants.CLIENT_REQUEST, "http://www.openuri.org/");
-		eleAction.addContent(SoapUtil.getElementNew("EXPRS_FG_CD", exprsFgCd));
-		eleAction.addContent(SoapUtil.getElementNew("FACT_CD", factCd));
-		eleAction.addContent(SoapUtil.getElementNew("EXPRS_DT", exprsDt));
-		eleAction.addContent(SoapUtil.getElementNew("SITM_CD", sitmCd));
-		eleAction.addContent(SoapUtil.getElementNew("DATA_GUBN", dataGubn));
-		eleAction.addContent(SoapUtil.getElementNew("COMPT_ADDR", comptAddr));
+		eleAction.addContent(SoapUtil.getElement("EXPRS_FG_CD", exprsFgCd));
+		eleAction.addContent(SoapUtil.getElement("FACT_CD", factCd));
+		eleAction.addContent(SoapUtil.getElement("EXPRS_DT", exprsDt));
+		eleAction.addContent(SoapUtil.getElement("SITM_CD", sitmCd));
+		eleAction.addContent(SoapUtil.getElement("DATA_GUBN", dataGubn));
+		eleAction.addContent(SoapUtil.getElement("COMPT_ADDR", comptAddr));
 		
 		// EAI 통신  
 		Map<String, Object> resString = SoapUtil.sendSoapServerMap(exprsMatListProcess, SoapUtil.getSoapXmlString( eleAction ));
 		
 		// EAI 통신 결과 String 변환
-		String apiResult = super.xmlMapToStringNew(resString);
+		String apiResult = super.xmlMapToString(resString);
 		
 		apiResult = apiResult.substring(1);
 		String[] rows = apiResult.split("\n");
@@ -2825,16 +2780,10 @@ public class JmaService extends XmlBaseService{
 			
 	}
 
-	public void getJMA029Processs(String empNo, String scrId, String wrkTyp, String comptAddr) throws Exception {
-		Element eleAction = new Element("clientRequestwithReturn");
-	    eleAction.addContent(SoapUtil.getElementNew("EMPNO", empNo));
-		      eleAction.addContent(SoapUtil.getElementNew("SCR_ID", scrId));
-		      eleAction.addContent(SoapUtil.getElementNew("WRK_TYP", wrkTyp));
-		      eleAction.addContent(SoapUtil.getElementNew("COMPT_ADDR", comptAddr));
-		      Map<String, Object> resString = SoapUtil.sendSoapServerMapNew("dummyUrl", this.historyInsertProcess, SoapUtil.getSoapXmlStringNew(eleAction, this.historyInsertProcess));
-	}
+	
 
 }
+
 
 
 

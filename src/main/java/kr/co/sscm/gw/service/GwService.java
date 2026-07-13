@@ -1,9 +1,17 @@
 package kr.co.sscm.gw.service;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URLConnection;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 import kr.co.sscm.common.base.BaseService;
@@ -103,4 +111,27 @@ public class GwService extends BaseService{
 		return apiResponse;
 	}
 
+	/** Load an image file from disk. */
+	public byte[] loadImage(String imagePath) throws IOException {
+		logger.info("loadImage() image file load...");
+		File imageFile = new File(imagePath);
+		if (!imageFile.exists()) {
+			throw new FileNotFoundException("File not found: " + imagePath);
+		}
+		return Files.readAllBytes(imageFile.toPath());
+	}
+
+	/** Detect MIME type from image bytes. */
+	public MediaType detectContentType(byte[] bytes) throws IOException {
+		InputStream is = new ByteArrayInputStream(bytes);
+		try {
+			String mime = URLConnection.guessContentTypeFromStream(is);
+			if (mime == null) {
+				return MediaType.APPLICATION_OCTET_STREAM;
+			}
+			return MediaType.parseMediaType(mime);
+		} finally {
+			is.close();
+		}
+	}
 }
