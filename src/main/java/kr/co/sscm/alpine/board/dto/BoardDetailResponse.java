@@ -11,8 +11,10 @@ public class BoardDetailResponse {
 	private String detail;                             // Content body
 	private String appendFileGroupUuid;                // Attachment file group UUID
 	private String postDate;                           // Post date(yyyyMMdd)
+	private String regDate;                            // Registration date time(yyyyMMddHHmmss)
 	private String writerEmpNo;                        // Writer employee number
 	private String writer;                             // Writer name or employee number
+	private String writerNm;                           // Writer name
 	private Integer viewCount;                         // View count
 	private List<BoardAppndFileResponse> appendFiles;  // Attachment files ordered by sortOrder
 
@@ -24,14 +26,20 @@ public class BoardDetailResponse {
 	public void setTitle(String title) { this.title = title; }
 	public String getDetail() { return detail; }
 	public void setDetail(String detail) { this.detail = detail; }
+	public String getContent() { return detail; }
+	public void setContent(String content) { this.detail = content; }
 	public String getAppendFileGroupUuid() { return appendFileGroupUuid; }
 	public void setAppendFileGroupUuid(String appendFileGroupUuid) { this.appendFileGroupUuid = appendFileGroupUuid; }
 	public String getPostDate() { return postDate; }
 	public void setPostDate(String postDate) { this.postDate = postDate; }
+	public String getRegDate() { return regDate; }
+	public void setRegDate(String regDate) { this.regDate = regDate; }
 	public String getWriterEmpNo() { return writerEmpNo; }
 	public void setWriterEmpNo(String writerEmpNo) { this.writerEmpNo = writerEmpNo; }
 	public String getWriter() { return writer; }
 	public void setWriter(String writer) { this.writer = writer; }
+	public String getWriterNm() { return writerNm; }
+	public void setWriterNm(String writerNm) { this.writerNm = writerNm; }
 	public Integer getViewCount() { return viewCount; }
 	public void setViewCount(Integer viewCount) { this.viewCount = viewCount; }
 	public List<BoardAppndFileResponse> getAppendFiles() { return appendFiles; }

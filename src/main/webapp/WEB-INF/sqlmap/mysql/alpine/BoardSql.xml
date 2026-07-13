@@ -39,8 +39,10 @@
 		<result property="detail" column="detail" />
 		<result property="appendFileGroupUuid" column="append_file_group_uuid" />
 		<result property="postDate" column="post_date" />
+		<result property="regDate" column="reg_date" />
 		<result property="writerEmpNo" column="writer_emp_no" />
 		<result property="writer" column="writer" />
+		<result property="writerNm" column="writer_nm" />
 		<result property="viewCount" column="view_count" />
 	</resultMap>
 	<resultMap id="boardAppndFileResultMap" type="kr.co.sscm.alpine.board.dto.BoardAppndFileResponse">
@@ -71,7 +73,13 @@
 			b.TITLE AS title,
 			b.WRITER_EMPNO AS writer,
 			b.POST_DT AS post_date,
-			b.WRITER_EMPNO AS writer_nm,
+			IFNULL((
+				SELECT u.user_nm
+				FROM ap_user u
+				WHERE u.user_no = b.WRITER_EMPNO COLLATE utf8mb4_unicode_ci
+				AND u.use_yn = 'Y'
+				LIMIT 1
+			), b.WRITER_EMPNO) AS writer_nm,
 			b.POST_DT AS reg_date,
 			b.VIEW_CNT AS view_cnt
 		<include refid="boardListWhere" />
@@ -87,8 +95,22 @@
 			b.CONTENT AS detail,
 			b.APPND_FILE_GROP_UUID AS append_file_group_uuid,
 			b.POST_DT AS post_date,
+			b.INP_DDTM AS reg_date,
 			b.WRITER_EMPNO AS writer_emp_no,
-			b.WRITER_EMPNO AS writer,
+			IFNULL((
+				SELECT u.user_nm
+				FROM ap_user u
+				WHERE u.user_no = b.WRITER_EMPNO COLLATE utf8mb4_unicode_ci
+				AND u.use_yn = 'Y'
+				LIMIT 1
+			), b.WRITER_EMPNO) AS writer,
+			IFNULL((
+				SELECT u.user_nm
+				FROM ap_user u
+				WHERE u.user_no = b.WRITER_EMPNO COLLATE utf8mb4_unicode_ci
+				AND u.use_yn = 'Y'
+				LIMIT 1
+			), b.WRITER_EMPNO) AS writer_nm,
 			b.VIEW_CNT AS view_count
 		FROM AP_BOARD b
 		WHERE b.BOARD_NO = #{boardNo}
@@ -216,7 +238,7 @@
 		SET TYPE = #{boardType},
 			TITLE = #{title},
 			CONTENT = #{detail},
-			APPND_FILE_GROP_UUID = #{appendFileGroupUuid},
+			APPND_FILE_GROP_UUID = IFNULL(NULLIF(#{appendFileGroupUuid}, ''), APPND_FILE_GROP_UUID),
 			POST_DT = #{postDate},
 			WRITER_EMPNO = #{writerEmpNo},
 			UPDT_DDTM = DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'),
@@ -238,4 +260,26 @@
 		AND USE_YN = 'Y'
 	</update>
 
+
+	<update id="updateAppndFileSortOrder" parameterType="kr.co.sscm.alpine.board.dto.BoardAppndFileRequest">
+		/* BoardDao.updateAppndFileSortOrder */
+		UPDATE ap_appnd_file_mgmt
+		SET SRT_ORD = #{srtOrd},
+			UPDT_DDTM = DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'),
+			UPDTR_EMPNO = #{userNo},
+			UPDTR_IP = #{clientIp}
+		WHERE APPND_FILE_UUID = #{appndFileUuid}
+		AND APPND_FILE_GROP_UUID = #{appndFileGropUuid}
+		AND IFNULL(APPND_FILE_DEL_YN, 'N') = 'N'
+	</update>
+	<update id="deleteAppndFile" parameterType="kr.co.sscm.alpine.board.dto.BoardSaveRequest">
+		/* BoardDao.deleteAppndFile */
+		UPDATE ap_appnd_file_mgmt
+		SET APPND_FILE_DEL_YN = 'Y',
+			UPDT_DDTM = DATE_FORMAT(NOW(), '%Y%m%d%H%i%s'),
+			UPDTR_EMPNO = #{userNo},
+			UPDTR_IP = #{clientIp}
+		WHERE APPND_FILE_UUID = #{deletedFileUuids}
+		AND IFNULL(APPND_FILE_DEL_YN, 'N') = 'N'
+	</update>
 </mapper>

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -110,7 +111,7 @@ public class FileUploadUtils {
 	}
 
 	public static Map<String, Object> fileUpload(HttpServletRequest request) throws ApiException {
-		Map<String, Object> resultMap = new HashMap<String, Object>();
+		Map<String, Object> resultMap = new LinkedHashMap<String, Object>();
 
 		if (!ServletFileUpload.isMultipartContent(request)) {
 			return resultMap;

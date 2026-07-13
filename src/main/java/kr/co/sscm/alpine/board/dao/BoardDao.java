@@ -62,4 +62,14 @@ public class BoardDao extends BaseDao {
 	public int deleteBoard(BoardSaveRequest request) {
 		return gwSqlSession.update(nameSpace + ".deleteBoard", request);
 	}
+
+	/** Soft-delete one attachment metadata row. */
+	public int deleteAppndFile(BoardSaveRequest request) {
+		return gwSqlSession.update(nameSpace + ".deleteAppndFile", request);
+	}
+
+	/** Update attachment display order. */
+	public int updateAppndFileSortOrder(BoardAppndFileRequest request) {
+		return gwSqlSession.update(nameSpace + ".updateAppndFileSortOrder", request);
+	}
 }

@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -42,7 +43,7 @@ public class BoardController extends BaseController {
 		request.setKeyword(toString(bodyMap.get("keyword")));
 
 		BoardListResponse response = boardService.getBoardList(request);
-		return createMspResponse(requestMap, httpRequest, "200", "success", response.getList());
+		return createMspResponse(requestMap, httpRequest, "200", "success", response);
 	}
 
 	/** Board detail. View count is increased when detail is opened. */
@@ -54,7 +55,7 @@ public class BoardController extends BaseController {
 	}
 
 	/** Board insert with JSON request body. */
-	@PostMapping(value = "/board/insertBoard", consumes = "application/json", produces = "application/json; charset=utf8")
+	@PostMapping(value = "/board/insertBoard", consumes = MediaType.APPLICATION_JSON_VALUE, produces = "application/json; charset=utf8")
 	public @ResponseBody Map<String, Object> insertBoard(@RequestBody(required = false) Map<String, Object> requestMap, HttpServletRequest httpRequest) {
 		BoardSaveRequest request = createSaveRequest(getBodyMap(requestMap));
 		AlpineSaveResponse response = boardService.insertBoard(request, CommonUtils.getClientIP(httpRequest));
@@ -62,7 +63,7 @@ public class BoardController extends BaseController {
 	}
 
 	/** Board insert with multipart form-data and optional image files. */
-	@PostMapping(value = "/board/insertBoard", consumes = "multipart/form-data", produces = "application/json; charset=utf8")
+	@PostMapping(value = "/board/insertBoard", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "application/json; charset=utf8")
 	public @ResponseBody Map<String, Object> insertBoardMultipart(HttpServletRequest httpRequest) throws ApiException {
 		BoardSaveRequest request = createSaveRequest(getParameterMap(httpRequest));
 		Map<String, Object> uploadedFileMap = FileUploadUtils.fileUpload(httpRequest);
@@ -76,7 +77,7 @@ public class BoardController extends BaseController {
 	}
 
 	/** Board update. */
-	@PostMapping(value = "/board/updateBoard", produces = "application/json; charset=utf8")
+	@PostMapping(value = "/board/updateBoard", consumes = MediaType.APPLICATION_JSON_VALUE, produces = "application/json; charset=utf8")
 	public @ResponseBody Map<String, Object> updateBoard(@RequestBody(required = false) Map<String, Object> requestMap, HttpServletRequest httpRequest) {
 		Map<String, Object> bodyMap = getBodyMap(requestMap);
 		BoardSaveRequest request = createSaveRequest(bodyMap);
@@ -85,6 +86,15 @@ public class BoardController extends BaseController {
 		return createMspResponse(requestMap, httpRequest, "200", "success", response);
 	}
 
+	/** Board update with multipart form-data and optional image files. */
+	@PostMapping(value = "/board/updateBoard", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "application/json; charset=utf8")
+	public @ResponseBody Map<String, Object> updateBoardMultipart(HttpServletRequest httpRequest) throws ApiException {
+		BoardSaveRequest request = createSaveRequest(getParameterMap(httpRequest));
+		Map<String, Object> uploadedFileMap = FileUploadUtils.fileUpload(httpRequest);
+
+		Boolean response = boardService.updateBoard(request.getBoardNo(), request, CommonUtils.getClientIP(httpRequest), uploadedFileMap);
+		return createMspResponse(null, httpRequest, "200", "success", response);
+	}
 	/** Board delete. Rows are soft-deleted by USE_YN = N. */
 	@PostMapping(value = "/board/deleteBoard", produces = "application/json; charset=utf8")
 	public @ResponseBody Map<String, Object> deleteBoard(@RequestBody(required = false) Map<String, Object> requestMap, HttpServletRequest httpRequest) {
@@ -148,11 +158,13 @@ public class BoardController extends BaseController {
 		paramMap.put("boardNo", request.getParameter("boardNo"));
 		paramMap.put("boardType", request.getParameter("boardType"));
 		paramMap.put("title", request.getParameter("title"));
-		paramMap.put("detail", request.getParameter("detail"));
+		paramMap.put("detail", firstNotEmpty(request.getParameter("detail"), request.getParameter("content")));
 		paramMap.put("appendFileGroupUuid", request.getParameter("appendFileGroupUuid"));
 		paramMap.put("postDate", request.getParameter("postDate"));
 		paramMap.put("writerEmpNo", request.getParameter("writerEmpNo"));
 		paramMap.put("userNo", request.getParameter("userNo"));
+		paramMap.put("deletedFileUuids", request.getParameter("deletedFileUuids"));
+		paramMap.put("fileOrderTokens", request.getParameter("fileOrderTokens"));
 		return paramMap;
 	}
 
@@ -161,11 +173,13 @@ public class BoardController extends BaseController {
 		request.setBoardNo(toLong(bodyMap.get("boardNo")));
 		request.setBoardType(toString(bodyMap.get("boardType")));
 		request.setTitle(toString(bodyMap.get("title")));
-		request.setDetail(toString(bodyMap.get("detail")));
+		request.setDetail(firstNotEmpty(toString(bodyMap.get("detail")), toString(bodyMap.get("content"))));
 		request.setAppendFileGroupUuid(toString(bodyMap.get("appendFileGroupUuid")));
 		request.setPostDate(toString(bodyMap.get("postDate")));
 		request.setWriterEmpNo(toString(bodyMap.get("writerEmpNo")));
 		request.setUserNo(toString(bodyMap.get("userNo")));
+		request.setDeletedFileUuids(toString(bodyMap.get("deletedFileUuids")));
+		request.setFileOrderTokens(toString(bodyMap.get("fileOrderTokens")));
 		return request;
 	}
 
@@ -185,6 +199,12 @@ public class BoardController extends BaseController {
 		return value == null ? null : String.valueOf(value);
 	}
 
+	private String firstNotEmpty(String first, String second) {
+		if (first != null && first.trim().length() > 0) {
+			return first;
+		}
+		return second;
+	}
 	private Long toLong(Object value) {
 		if (value instanceof Number) {
 			return Long.valueOf(((Number) value).longValue());
