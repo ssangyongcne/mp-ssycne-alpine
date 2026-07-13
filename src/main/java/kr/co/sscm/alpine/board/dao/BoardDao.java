@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.stereotype.Repository;
 
 import kr.co.sscm.alpine.board.dto.BoardAppndFileRequest;
+import kr.co.sscm.alpine.board.dto.BoardAppndFileResponse;
 import kr.co.sscm.alpine.board.dto.BoardDetailResponse;
 import kr.co.sscm.alpine.board.dto.BoardSaveRequest;
 import kr.co.sscm.alpine.board.dto.BoardSummaryResponse;
@@ -32,6 +33,11 @@ public class BoardDao extends BaseDao {
 		return gwSqlSession.selectOne(nameSpace + ".selectBoardDetail", boardNo);
 	}
 
+	/** Select attachment metadata rows by group UUID in sort order. */
+	public List<BoardAppndFileResponse> selectAppndFileList(String appndFileGroupUuid) {
+		return gwSqlSession.selectList(nameSpace + ".selectAppndFileList", appndFileGroupUuid);
+	}
+
 	/** Increase view count by one. */
 	public int updateBoardViewCount(Long boardNo) {
 		return gwSqlSession.update(nameSpace + ".updateBoardViewCount", boardNo);
@@ -55,5 +61,15 @@ public class BoardDao extends BaseDao {
 	/** Soft-delete an existing board row. */
 	public int deleteBoard(BoardSaveRequest request) {
 		return gwSqlSession.update(nameSpace + ".deleteBoard", request);
+	}
+
+	/** Soft-delete one attachment metadata row. */
+	public int deleteAppndFile(BoardSaveRequest request) {
+		return gwSqlSession.update(nameSpace + ".deleteAppndFile", request);
+	}
+
+	/** Update attachment display order. */
+	public int updateAppndFileSortOrder(BoardAppndFileRequest request) {
+		return gwSqlSession.update(nameSpace + ".updateAppndFileSortOrder", request);
 	}
 }

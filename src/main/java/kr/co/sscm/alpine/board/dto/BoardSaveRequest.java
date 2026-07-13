@@ -1,17 +1,19 @@
-﻿package kr.co.sscm.alpine.board.dto;
+package kr.co.sscm.alpine.board.dto;
 
-/** 게시글 등록/수정/삭제 요청 DTO. */
+/** Board save/update/delete request DTO. */
 public class BoardSaveRequest {
 
-	private Long boardNo;                 // 게시글번호
-	private String boardType;             // 게시판구분(N: 공지, R: 후기)
-	private String title;                 // 게시판제목내용
-	private String detail;                // 게시판상세내용
-	private String appendFileGroupUuid;   // 첨부파일그룹UUID
-	private String postDate;              // 게시판게시일자(yyyyMMdd)
-	private String writerEmpNo;           // 게시판게시자 사번
-	private String userNo;                // 등록/수정/삭제 처리자
-	private String clientIp;              // 등록/수정/삭제 처리자 IP
+	private Long boardNo;
+	private String boardType;
+	private String title;
+	private String detail;
+	private String appendFileGroupUuid;
+	private String postDate;
+	private String writerEmpNo;
+	private String userNo;
+	private String clientIp;
+	private String deletedFileUuids;
+	private String fileOrderTokens;
 
 	public Long getBoardNo() { return boardNo; }
 	public void setBoardNo(Long boardNo) { this.boardNo = boardNo; }
@@ -31,4 +33,8 @@ public class BoardSaveRequest {
 	public void setUserNo(String userNo) { this.userNo = userNo; }
 	public String getClientIp() { return clientIp; }
 	public void setClientIp(String clientIp) { this.clientIp = clientIp; }
+	public String getDeletedFileUuids() { return deletedFileUuids; }
+	public void setDeletedFileUuids(String deletedFileUuids) { this.deletedFileUuids = deletedFileUuids; }
+	public String getFileOrderTokens() { return fileOrderTokens; }
+	public void setFileOrderTokens(String fileOrderTokens) { this.fileOrderTokens = fileOrderTokens; }
 }
