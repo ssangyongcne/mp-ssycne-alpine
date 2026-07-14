@@ -1,13 +1,15 @@
 ﻿package kr.co.sscm.alpine.admin.dto;
 
+import java.util.List;
+
 public class AdminPasswordResetRequest {
 
-	private String targetEmpNo;
-	private String adminEmpNo;
+	private String userNo;
+	private List<AdminPasswordResetRequest> list;
 
-	public String getTargetEmpNo() { return targetEmpNo; }
-	public void setTargetEmpNo(String targetEmpNo) { this.targetEmpNo = targetEmpNo; }
-	public String getAdminEmpNo() { return adminEmpNo; }
-	public void setAdminEmpNo(String adminEmpNo) { this.adminEmpNo = adminEmpNo; }
+	public String getUserNo() { return userNo; }
+	public void setUserNo(String userNo) { this.userNo = userNo; }
+	public List<AdminPasswordResetRequest> getList() { return list; }
+	public void setList(List<AdminPasswordResetRequest> list) { this.list = list; }
 }
 

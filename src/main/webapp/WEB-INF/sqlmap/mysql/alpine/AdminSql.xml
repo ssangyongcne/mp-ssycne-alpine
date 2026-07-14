@@ -3,7 +3,44 @@
 
 <mapper namespace="ssyc.AdminDao">
 
+	<resultMap id="AdminListResultMap" type="kr.co.sscm.alpine.admin.dto.AdminUserResponse">
+		<id property="userNo" column="USER_NO" />
+		<result property="userNm" column="USER_NM" />
+		<result property="deptNm" column="DEPT_NM" />
+		<result property="dutyNm" column="DUTY_NM" />
+		<result property="phone" column="PHONE" />
+		<result property="pw" column="PW" />
+		<result property="auth" column="AUTH" />
+		<result property="useYn" column="USE_YN" />
+		<result property="loginDdtm" column="LOGIN_DDTM" />
+		<result property="firstLogin" column="FIRST_LOGIN" />
+	</resultMap>
+
 	<!-- TODO: 사용자 목록 조회 쿼리 추가 예정 -->
+	<select id="selectAdminList" parameterType="map" resultMap="AdminListResultMap">
+		/* AdminDao.selectAdminList */
+		SELECT
+			b.USER_NO AS USER_NO,
+			b.USER_NM AS USER_NM,
+			b.DEPT_NM AS DEPT_NM,
+			b.DUTY_NM AS DUTY_NM,
+			b.PHONE AS phone,
+			b.PW AS pw,
+			b.AUTH AS AUTH,
+			b.USE_YN AS USE_YN,
+			b.LOGIN_DDTM AS LOGIN_DDTM,
+			b.FIRST_LOGIN AS FIRST_LOGIN
+		FROM AP_USER b
+		ORDER BY USER_NO ASC
+	</select>
+	
+	<update id="resetPassword" parameterType="map">
+		/* AdminSql.resetPassword */
+		UPDATE ap_user
+		SET pw = '{bcrypt}$2a$10$wd3Dmgwp3Yg7W0p2IPsd8OMtZhZ273lp0ZwKPJpJSfpcHeqDpDyj2',
+		    first_login = 'Y'
+		WHERE user_no = #{userNo}
+	</update>
 
 	<!-- TODO: 패스워드 초기화 쿼리 추가 예정 -->
 
