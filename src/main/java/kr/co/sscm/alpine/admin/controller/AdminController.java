@@ -3,6 +3,8 @@
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,26 +27,70 @@ public class AdminController extends BaseController {
 	private AdminService adminService;
 
 	@PostMapping(value = "/admin/user/getUserList", produces = "application/json; charset=utf8")
-	public @ResponseBody ApiResponse<AdminUserListResponse> getUserList(@RequestBody(required = false) Map<String, Object> requestMap) {
+	public @ResponseBody Map<String, Object> getUserList(@RequestBody(required = false) Map<String, Object> requestMap, HttpServletRequest httpRequest){
 		Map<String, Object> bodyMap = getBodyMap(requestMap);
+		
+		logger.info("조회 시작");
 
 		AdminUserSearchRequest request = new AdminUserSearchRequest();
-		request.setUserNo(toString(bodyMap.get("userNo")));
+/*		request.setUserNo(toString(bodyMap.get("userNo")));
 		request.setUserNm(toString(bodyMap.get("userNm")));
 		request.setDeptNm(toString(bodyMap.get("deptNm")));
 		request.setAuth(toString(bodyMap.get("auth")));
-		request.setUseYn(toString(bodyMap.get("useYn")));
+		request.setUseYn(toString(bodyMap.get("useYn")));*/
 
-		return ApiResponse.success(adminService.getUserList(request));
+		//return ApiResponse.success(adminService.getUserList(request));
+		
+		AdminUserListResponse response = adminService.getUserList(request);
+		return createMspResponse(requestMap, httpRequest, "200", "success", response);
+	}
+	
+	private Map<String, Object> createMspResponse(Map<String, Object> requestMap, HttpServletRequest httpRequest, String resultCode, String resultMsg, Object result) {
+		Map<String, Object> responseMap = new HashMap<String, Object>();
+		Map<String, Object> headMap = new HashMap<String, Object>();
+		Map<String, Object> bodyMap = new HashMap<String, Object>();
+
+		headMap.put("result_code", resultCode);
+		headMap.put("result_msg", resultMsg);
+		headMap.put("screen_id", getScreenId(requestMap, httpRequest));
+
+		bodyMap.put("resultCode", resultCode);
+		bodyMap.put("resultMsg", resultMsg);
+		bodyMap.put("result", result);
+
+		responseMap.put("head", headMap);
+		responseMap.put("body", bodyMap);
+		return responseMap;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private String getScreenId(Map<String, Object> requestMap, HttpServletRequest httpRequest) {
+		if (requestMap != null) {
+			Object head = requestMap.get("head");
+			if (head instanceof Map) {
+				Object screenId = ((Map<String, Object>) head).get("screen_id");
+				if (screenId != null) {
+					return String.valueOf(screenId);
+				}
+			}
+		}
+
+		String screenId = httpRequest.getHeader("screen_id");
+		return screenId == null ? "" : screenId;
 	}
 
+
 	@PostMapping(value = "/admin/password/reset", produces = "application/json; charset=utf8")
-	public @ResponseBody ApiResponse<Boolean> resetPassword(@RequestBody(required = false) Map<String, Object> requestMap) {
+	public @ResponseBody Map<String, Object> resetPassword(@RequestBody(required = false) Map<String, Object> requestMap, HttpServletRequest httpRequest){
+			
 		Map<String, Object> bodyMap = getBodyMap(requestMap);
 		AdminPasswordResetRequest request = new AdminPasswordResetRequest();
-		request.setTargetEmpNo(toString(bodyMap.get("targetEmpNo")));
-		request.setAdminEmpNo(toString(bodyMap.get("adminEmpNo")));
-		return ApiResponse.success(adminService.resetPassword(request));
+		request.setUserNo(toString(bodyMap.get("userNo")));
+		logger.info(toString(bodyMap.get("userNo")));
+		
+		AdminPasswordResetRequest response = adminService.resetPassword(request);
+		return createMspResponse(requestMap, httpRequest, "200", "success", response);
+		
 	}
 
 	@SuppressWarnings("unchecked")

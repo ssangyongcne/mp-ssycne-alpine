@@ -12,6 +12,7 @@ public class AdminUserResponse {
 	private String firstLogin;
 	private String useYn;
 	private String loginDdtm;
+	private String pw;
 
 	public String getUserNo() { return userNo; }
 	public void setUserNo(String userNo) { this.userNo = userNo; }
@@ -31,5 +32,7 @@ public class AdminUserResponse {
 	public void setUseYn(String useYn) { this.useYn = useYn; }
 	public String getLoginDdtm() { return loginDdtm; }
 	public void setLoginDdtm(String loginDdtm) { this.loginDdtm = loginDdtm; }
+	public String getPw() { return pw; }
+	public void setPw(String pw) { this.pw = pw; }
 }
 
