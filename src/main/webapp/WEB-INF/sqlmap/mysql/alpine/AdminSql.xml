@@ -31,7 +31,26 @@
 			b.LOGIN_DDTM AS LOGIN_DDTM,
 			b.FIRST_LOGIN AS FIRST_LOGIN
 		FROM AP_USER b
-		ORDER BY USER_NO ASC
+		ORDER BY
+		    CASE TRIM(b.DUTY_NM)
+		        WHEN '사장'     THEN 10
+		        WHEN '전무'     THEN 20
+		        WHEN '상무'     THEN 30
+		        WHEN '상무보'    THEN 40
+		        WHEN '이사'     THEN 50
+		        WHEN '부장이사'  THEN 60
+		        WHEN '부장'     THEN 70
+		        WHEN '차장'     THEN 80
+		        WHEN '과장'     THEN 90
+		        WHEN '대리'     THEN 100
+		        WHEN '기성'     THEN 110
+		        WHEN '기장'     THEN 120
+		        WHEN '계장'     THEN 130
+		        WHEN '주임'     THEN 140
+		        WHEN '사원'     THEN 150
+		        ELSE 990
+		    END,
+		    b.USER_NO ASC
 	</select>
 	
 	<update id="resetPassword" parameterType="map">
