@@ -25,21 +25,21 @@
 			pw,
 			auth,
 			first_login
-		FROM ap_user
+		FROM AP_USER
 		WHERE user_no = #{userNo}
 		AND use_yn = 'Y'
 	</select>
 
 	<update id="updateLoginDdtm" parameterType="String">
 		/* AlpineAuthDao.updateLoginDdtm */
-		UPDATE ap_user
+		UPDATE AP_USER
 		SET login_ddtm = NOW()
 		WHERE user_no = #{userNo}
 	</update>
 
 	<update id="updatePassword" parameterType="map">
 		/* AlpineAuthDao.updatePassword */
-		UPDATE ap_user
+		UPDATE AP_USER
 		SET pw = #{pw},
 			first_login = 'N',
 			login_ddtm = NOW()

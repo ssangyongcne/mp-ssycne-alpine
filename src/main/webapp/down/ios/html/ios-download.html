@@ -57,9 +57,9 @@
         var host = location.host;
         // 개발서버( SSL 미적용으로 DROP BOX를 이용한 배포 방식 )
         if (host.indexOf("dev") >= 0) {
-            location.href = "itms-services://?action=download-manifest&url=https://dl.dropboxusercontent.com/s/s80w4a58v3dfp1r/kr.co.ssycne.mobile.plist";
+            location.href = "itms-services://?action=download-manifest&url=https://dl.dropboxusercontent.com/s/s80w4a58v3dfp1r/kr.co.ssycne.alpine.plist";
         } else {
-            location.href = "itms-services://?action=download-manifest&url=" + location.origin + "/uploadfiles/apk/kr.co.ssycne.mobile.plist";
+            location.href = "itms-services://?action=download-manifest&url=" + location.origin + "/uploadfiles/apk/kr.co.ssycne.alpine.plist";
         }
     }
 </script>

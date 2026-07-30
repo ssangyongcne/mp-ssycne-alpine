@@ -55,7 +55,7 @@
 	
 	<update id="resetPassword" parameterType="map">
 		/* AdminSql.resetPassword */
-		UPDATE ap_user
+		UPDATE AP_USER
 		SET pw = '{bcrypt}$2a$10$wd3Dmgwp3Yg7W0p2IPsd8OMtZhZ273lp0ZwKPJpJSfpcHeqDpDyj2',
 		    first_login = 'Y'
 		WHERE user_no = #{userNo}

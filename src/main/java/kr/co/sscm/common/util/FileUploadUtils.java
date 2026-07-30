@@ -1,5 +1,9 @@
 package kr.co.sscm.common.util;
 
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
+import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -10,15 +14,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
+
+import com.drew.imaging.ImageMetadataReader;
+import com.drew.metadata.Metadata;
+import com.drew.metadata.exif.ExifIFD0Directory;
 
 import kr.co.sscm.common.exception.ApiException;
 
@@ -29,6 +40,9 @@ import kr.co.sscm.common.exception.ApiException;
  */
 @Component
 public class FileUploadUtils {
+
+	private static final Logger logger = LoggerFactory.getLogger(FileUploadUtils.class);
+	private static final int THUMBNAIL_MAX_SIZE = 480;
 
 	public static String absolute_path;
 
@@ -171,7 +185,9 @@ public class FileUploadUtils {
 
 				try {
 					FileUtils.forceMkdir(uploadDir);
-					file.transferTo(new File(uploadDir, fileNmUuid));
+					File uploadedFile = new File(uploadDir, fileNmUuid);
+					file.transferTo(uploadedFile);
+					createThumbnailQuietly(uploadedFile, fileExt);
 				} catch (IOException e) {
 					throw new ApiException("File upload failed.", e);
 				}
@@ -196,6 +212,137 @@ public class FileUploadUtils {
 		return resultMap;
 	}
 
+	public static File getThumbnailFile(File originalFile) {
+		return new File(originalFile.getParentFile(), originalFile.getName() + "_thumbnail");
+	}
+
+	private static void createThumbnailQuietly(File originalFile, String fileExt) {
+		if (!isThumbnailSupportedImage(fileExt)) {
+			return;
+		}
+
+		try {
+			BufferedImage originalImage = ImageIO.read(originalFile);
+			if (originalImage == null) {
+				return;
+			}
+			originalImage = applyExifOrientation(originalFile, originalImage, fileExt);
+
+			int originalWidth = originalImage.getWidth();
+			int originalHeight = originalImage.getHeight();
+			int maxSide = Math.max(originalWidth, originalHeight);
+			double scale = maxSide > THUMBNAIL_MAX_SIZE ? (double) THUMBNAIL_MAX_SIZE / maxSide : 1.0;
+			int thumbnailWidth = Math.max(1, (int) Math.round(originalWidth * scale));
+			int thumbnailHeight = Math.max(1, (int) Math.round(originalHeight * scale));
+
+			int imageType = isJpeg(fileExt) ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
+			BufferedImage thumbnailImage = new BufferedImage(thumbnailWidth, thumbnailHeight, imageType);
+			Graphics2D graphics = thumbnailImage.createGraphics();
+			try {
+				graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+				graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+				graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+				graphics.drawImage(originalImage, 0, 0, thumbnailWidth, thumbnailHeight, null);
+			} finally {
+				graphics.dispose();
+			}
+
+			String formatName = isJpeg(fileExt) ? "jpg" : "png";
+			ImageIO.write(thumbnailImage, formatName, getThumbnailFile(originalFile));
+		} catch (Exception e) {
+			logger.warn("Thumbnail creation failed. originalFile={}", originalFile.getAbsolutePath(), e);
+		}
+	}
+
+	private static BufferedImage applyExifOrientation(File originalFile, BufferedImage image, String fileExt) {
+		if (!isJpeg(fileExt)) {
+			return image;
+		}
+
+		int orientation = readExifOrientation(originalFile);
+		if (orientation <= 1) {
+			return image;
+		}
+
+		int width = image.getWidth();
+		int height = image.getHeight();
+		int orientedWidth = width;
+		int orientedHeight = height;
+		AffineTransform transform = new AffineTransform();
+
+		switch (orientation) {
+		case 2:
+			transform.scale(-1.0, 1.0);
+			transform.translate(-width, 0);
+			break;
+		case 3:
+			transform.translate(width, height);
+			transform.rotate(Math.PI);
+			break;
+		case 4:
+			transform.scale(1.0, -1.0);
+			transform.translate(0, -height);
+			break;
+		case 5:
+			orientedWidth = height;
+			orientedHeight = width;
+			transform.rotate(Math.PI / 2);
+			transform.scale(1.0, -1.0);
+			break;
+		case 6:
+			orientedWidth = height;
+			orientedHeight = width;
+			transform.translate(height, 0);
+			transform.rotate(Math.PI / 2);
+			break;
+		case 7:
+			orientedWidth = height;
+			orientedHeight = width;
+			transform.translate(height, 0);
+			transform.rotate(Math.PI / 2);
+			transform.scale(-1.0, 1.0);
+			transform.translate(-width, 0);
+			break;
+		case 8:
+			orientedWidth = height;
+			orientedHeight = width;
+			transform.translate(0, width);
+			transform.rotate(-Math.PI / 2);
+			break;
+		default:
+			return image;
+		}
+
+		BufferedImage orientedImage = new BufferedImage(orientedWidth, orientedHeight, BufferedImage.TYPE_INT_RGB);
+		Graphics2D graphics = orientedImage.createGraphics();
+		try {
+			graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+			graphics.drawImage(image, transform, null);
+		} finally {
+			graphics.dispose();
+		}
+		return orientedImage;
+	}
+
+	private static int readExifOrientation(File originalFile) {
+		try {
+			Metadata metadata = ImageMetadataReader.readMetadata(originalFile);
+			ExifIFD0Directory directory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
+			if (directory != null && directory.containsTag(ExifIFD0Directory.TAG_ORIENTATION)) {
+				return directory.getInt(ExifIFD0Directory.TAG_ORIENTATION);
+			}
+		} catch (Exception e) {
+			logger.warn("Failed to read image EXIF orientation. originalFile={}", originalFile.getAbsolutePath(), e);
+		}
+		return 1;
+	}
+	private static boolean isThumbnailSupportedImage(String fileExt) {
+		return "jpg".equals(fileExt) || "jpeg".equals(fileExt) || "png".equals(fileExt);
+	}
+
+	private static boolean isJpeg(String fileExt) {
+		return "jpg".equals(fileExt) || "jpeg".equals(fileExt);
+	}
 	private static boolean isAllowedFitmFileExtension(String fileExt) {
 		return "jpg".equals(fileExt) || "jpeg".equals(fileExt) || "gif".equals(fileExt)
 				|| "png".equals(fileExt) || "bmp".equals(fileExt) || "webp".equals(fileExt)
