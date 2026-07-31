@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -14,6 +15,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import kr.co.sscm.common.base.BaseController;
@@ -294,12 +297,24 @@ public class JmaController extends BaseController{
 	/** Inline image view for files stored under fitm_file_path/yyyy/MM/dd. */
 	@GetMapping(value = "/imageView/{path1}/{path2}/{path3}/{fileNm}")
 	public ResponseEntity<byte[]> imageView(@PathVariable String path1, @PathVariable String path2,
-			@PathVariable String path3, @PathVariable String fileNm) throws IOException {
+			@PathVariable String path3, @PathVariable String fileNm,
+			@RequestParam(value = "thumbnail", required = false, defaultValue = "false") boolean thumbnail) throws IOException {
 		String imagePath = fitmFilePath + File.separator + path1 + File.separator + path2 + File.separator + path3
 				+ File.separator + fileNm;
+		File originalFile = new File(imagePath);
+		File imageFile = originalFile;
+		if (thumbnail) {
+			File thumbnailFile = new File(originalFile.getParentFile(), originalFile.getName() + "_thumbnail");
+			if (thumbnailFile.exists()) {
+				imageFile = thumbnailFile;
+			} else {
+				logger.warn("Thumbnail image not found. fallback to original. thumbnailFile={}", thumbnailFile.getAbsolutePath());
+			}
+		}
+
 		byte[] imageBytes = null;
 		try {
-			imageBytes = gwService.loadImage(imagePath);
+			imageBytes = gwService.loadImage(imageFile);
 		} catch (FileNotFoundException e) {
 			logger.error("imageView ERROR : {}", e);
 			return ResponseEntity.notFound().build();
@@ -307,9 +322,11 @@ public class JmaController extends BaseController{
 		if (imageBytes == null) {
 			return ResponseEntity.notFound().build();
 		}
-		MediaType mediaType = gwService.detectContentType(imageBytes);
+		MediaType mediaType = gwService.detectContentType(imageFile, imageBytes);
 		return ResponseEntity.ok()
 				.contentType(mediaType)
+				.cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS).cachePublic())
+				.lastModified(imageFile.lastModified())
 				.header(HttpHeaders.CONTENT_DISPOSITION, "inline")
 				.body(imageBytes);
 	}

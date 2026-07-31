@@ -18,7 +18,6 @@ import kr.co.sscm.alpine.auth.dto.AlpineLoginRequest;
 import kr.co.sscm.alpine.auth.dto.AlpineLoginResponse;
 import kr.co.sscm.alpine.auth.dto.AlpinePasswordChangeRequest;
 import kr.co.sscm.alpine.auth.service.AlpineAuthService;
-import kr.co.sscm.alpine.common.dto.ApiResponse;
 import kr.co.sscm.common.base.BaseController;
 
 @Controller
@@ -44,7 +43,7 @@ public class AlpineAuthController extends BaseController {
 	}
 
 	@PostMapping(value = "/password/change", produces = "application/json; charset=utf8")
-	public @ResponseBody ResponseEntity<ApiResponse<Void>> changePassword(@RequestBody Map<String, Object> requestMap) {
+	public @ResponseBody ResponseEntity<Map<String, Object>> changePassword(@RequestBody Map<String, Object> requestMap, HttpServletRequest httpRequest) {
 		Map<String, Object> bodyMap = getBodyMap(requestMap);
 
 		AlpinePasswordChangeRequest request = new AlpinePasswordChangeRequest();
@@ -54,15 +53,15 @@ public class AlpineAuthController extends BaseController {
 		try {
 			String result = alpineAuthService.changePassword(request);
 			if (AlpineAuthService.CHANGE_SUCCESS.equals(result)) {
-				return new ResponseEntity<ApiResponse<Void>>(new ApiResponse<Void>("200", "success", null), HttpStatus.OK);
+				return new ResponseEntity<Map<String, Object>>(createMspResponse(requestMap, httpRequest, "200", "success", null), HttpStatus.OK);
 			}
 			if (AlpineAuthService.CHANGE_INVALID_POLICY.equals(result)) {
-				return new ResponseEntity<ApiResponse<Void>>(ApiResponse.<Void>fail("400", "비밀번호는 최소 8자 이상 입력해 주세요."), HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<Map<String, Object>>(createMspResponse(requestMap, httpRequest, "400", "비밀번호는 최소 8자 이상 입력해 주세요.", null), HttpStatus.OK);
 			}
 
-			return new ResponseEntity<ApiResponse<Void>>(ApiResponse.<Void>fail("500", "서버 오류가 발생했습니다."), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<Map<String, Object>>(createMspResponse(requestMap, httpRequest, "500", "서버 오류가 발생했습니다.", null), HttpStatus.OK);
 		} catch (Exception e) {
-			return new ResponseEntity<ApiResponse<Void>>(ApiResponse.<Void>fail("500", "서버 오류가 발생했습니다."), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<Map<String, Object>>(createMspResponse(requestMap, httpRequest, "500", "서버 오류가 발생했습니다.", null), HttpStatus.OK);
 		}
 	}
 
@@ -71,7 +70,11 @@ public class AlpineAuthController extends BaseController {
 		Map<String, Object> headMap = new HashMap<String, Object>();
 		Map<String, Object> bodyMap = new HashMap<String, Object>();
 
-		headMap.put("result_code", resultCode);
+		try {
+			headMap.put("result_code", Integer.valueOf(resultCode));
+		} catch (NumberFormatException e) {
+			headMap.put("result_code", resultCode);
+		}
 		headMap.put("result_msg", resultMsg);
 		headMap.put("screen_id", getScreenId(requestMap, httpRequest));
 

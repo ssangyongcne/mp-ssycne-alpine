@@ -113,16 +113,32 @@ public class GwService extends BaseService{
 
 	/** Load an image file from disk. */
 	public byte[] loadImage(String imagePath) throws IOException {
+		return loadImage(new File(imagePath));
+	}
+
+	/** Load an image file from disk. */
+	public byte[] loadImage(File imageFile) throws IOException {
 		logger.info("loadImage() image file load...");
-		File imageFile = new File(imagePath);
 		if (!imageFile.exists()) {
-			throw new FileNotFoundException("File not found: " + imagePath);
+			throw new FileNotFoundException("File not found: " + imageFile.getAbsolutePath());
 		}
 		return Files.readAllBytes(imageFile.toPath());
 	}
 
 	/** Detect MIME type from image bytes. */
 	public MediaType detectContentType(byte[] bytes) throws IOException {
+		return detectContentType(null, bytes);
+	}
+
+	/** Detect MIME type from image file path or bytes. */
+	public MediaType detectContentType(File imageFile, byte[] bytes) throws IOException {
+		if (imageFile != null) {
+			String mime = Files.probeContentType(imageFile.toPath());
+			if (mime != null) {
+				return MediaType.parseMediaType(mime);
+			}
+		}
+
 		InputStream is = new ByteArrayInputStream(bytes);
 		try {
 			String mime = URLConnection.guessContentTypeFromStream(is);

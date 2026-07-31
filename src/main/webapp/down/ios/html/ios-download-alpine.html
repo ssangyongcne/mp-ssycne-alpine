@@ -5,12 +5,12 @@
     <!-- Required meta tags -->
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport"
+    <meta name="viewport" 
         content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover" />
     <meta name="format-detection" content="telephone=no" />
     <link rel="stylesheet" href="../css/morpheus-style.css" />
 
-    <title>쌍용씨앤이 IOS 다운로드 화면</title> 
+    <title>쌍용씨앤이 산우회 다운로드 화면</title>
 </head>
 
 <body>
@@ -55,9 +55,6 @@
 
     function downApk() {
         var host = location.host;
-        // 개발서버( SSL 미적용으로 DROP BOX를 이용한 배포 방식 )
-
         location.href = "itms-services://?action=download-manifest&url=" + location.origin + "/uploadfiles/apk/protest/kr.co.ssycne.alpine.plist";
-        
     }
 </script>
