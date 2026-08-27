@@ -24,6 +24,7 @@
 	<resultMap id="boardSummaryResultMap" type="kr.co.sscm.alpine.board.dto.BoardSummaryResponse">
 		<id property="boardNo" column="board_no" />
 		<result property="boardType" column="board_type" />
+		<result property="eventNo" column="event_no" />
 		<result property="title" column="title" />
 		<result property="writer" column="writer" />
 		<result property="postDate" column="post_date" />
@@ -70,6 +71,7 @@
 		SELECT
 			b.BOARD_NO AS board_no,
 			b.TYPE AS board_type,
+			b.EVENT_NO AS event_no,
 			b.TITLE AS title,
 			b.WRITER_EMPNO AS writer,
 			b.POST_DT AS post_date,

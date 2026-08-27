@@ -5,6 +5,7 @@ public class BoardSummaryResponse {
 
 	private Long boardNo;        // Board number
 	private String boardType;    // Board type: N notice, R review
+	private Long eventNo;    	 // eventNo : 산행차수 
 	private String title;        // Title
 	private String writer;       // Writer name or employee number
 	private String postDate;     // Post date yyyyMMdd
@@ -16,6 +17,8 @@ public class BoardSummaryResponse {
 	public void setBoardNo(Long boardNo) { this.boardNo = boardNo; }
 	public String getBoardType() { return boardType; }
 	public void setBoardType(String boardType) { this.boardType = boardType; }
+	public Long getEventNo() { return eventNo; }
+	public void setEventNo(Long eventNo) { this.eventNo = eventNo; }
 	public String getTitle() { return title; }
 	public void setTitle(String title) { this.title = title; }
 	public String getWriter() { return writer; }

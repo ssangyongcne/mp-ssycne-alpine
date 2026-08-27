@@ -1,4 +1,4 @@
-﻿package kr.co.sscm.alpine.board.dto;
+package kr.co.sscm.alpine.board.dto;
 
 import java.util.List;
 
