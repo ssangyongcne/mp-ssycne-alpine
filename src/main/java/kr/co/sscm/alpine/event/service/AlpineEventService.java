@@ -12,7 +12,7 @@ import kr.co.sscm.alpine.event.dto.AlpineEventSummaryResponse;
 import kr.co.sscm.common.base.BaseService;
 
 @Service
-public class AlpineEventService extends BaseService {
+public class AlpineEventService extends BaseService { 
 	
 	@Autowired
 	private AlpineEventDao eventDao;

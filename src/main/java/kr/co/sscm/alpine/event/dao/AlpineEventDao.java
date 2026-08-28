@@ -3,7 +3,7 @@ package kr.co.sscm.alpine.event.dao;
 import java.util.List;
 import org.springframework.stereotype.Repository;
 import kr.co.sscm.alpine.event.dto.AlpineEventCountResponse;
-import kr.co.sscm.alpine.event.dto.AlpineEventSummaryResponse;
+import kr.co.sscm.alpine.event.dto.AlpineEventSummaryResponse; 
 import kr.co.sscm.common.base.BaseDao;
 
 /** 관리자 사용자 관리 DAO. 실제 SQL은 기능 확정 후 연결한다. */

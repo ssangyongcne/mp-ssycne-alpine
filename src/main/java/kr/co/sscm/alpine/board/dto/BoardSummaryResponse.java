@@ -1,7 +1,7 @@
 package kr.co.sscm.alpine.board.dto;
 
 /** Board list row response DTO. */
-public class BoardSummaryResponse {
+public class BoardSummaryResponse { 
 
 	private Long boardNo;        // Board number
 	private String boardType;    // Board type: N notice, R review

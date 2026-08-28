@@ -3,7 +3,7 @@ package kr.co.sscm.alpine.event.dto;
 import java.util.List;
 
 /** 관리자 사용자 목록 응답 DTO. */
-public class AlpineEventListResponse {
+public class AlpineEventListResponse { 
 
 	private Integer totalCount;
 	private List<AlpineEventCountResponse> countList;

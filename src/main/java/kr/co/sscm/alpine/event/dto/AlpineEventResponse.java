@@ -10,7 +10,7 @@ public class AlpineEventResponse {
 	private String dutyNm;
 	private String phone;
 	private String auth;
-	private String firstLogin;
+	private String firstLogin; 
 	private String useYn;
 	private String loginDdtm;
 	private String pw;

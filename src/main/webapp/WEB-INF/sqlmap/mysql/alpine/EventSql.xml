@@ -17,8 +17,7 @@
 		<result property="cnt" column="CNT" />
 	</resultMap>
 
-
-	
+	<!-- TODO: 공통 조건절 -->
 	<sql id="eventListWhere">
 		FROM		morpheus.AP_HISTORY T1
 		JOIN		morpheus.AP_USER T2 on T1.USER_NO=T2.USER_NO 
@@ -33,6 +32,7 @@
 					COUNT(*) AS CNT
 		<include refid="eventListWhere" />
 		GROUP BY	CASE WHEN T2.MEMBER_YN='Y' THEN 'Y' ELSE 'N' END
+		ORDER BY 	T2.MEMBER_YN DESC
 	</select>
 	
 	<!-- TODO: 산행참여자 목록 조회 쿼리 -->

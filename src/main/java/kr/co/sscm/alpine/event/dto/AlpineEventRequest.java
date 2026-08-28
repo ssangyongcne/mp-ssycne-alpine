@@ -7,7 +7,7 @@ public class AlpineEventRequest {
 	private String userNm;
 	private String deptNm;
 	private String auth;
-	private String useYn;
+	private String useYn; 
 
 	public String getUserNo() { return userNo; }
 	public void setUserNo(String userNo) { this.userNo = userNo; }

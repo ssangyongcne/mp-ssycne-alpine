@@ -1,7 +1,7 @@
 package kr.co.sscm.alpine.event.dto;
 
 /** Event participant count grouped by membership status. */
-public class AlpineEventCountResponse {
+public class AlpineEventCountResponse { 
 
 	private String memberYN;
 	private Integer cnt;

@@ -82,7 +82,7 @@ public class AlpineEventController extends BaseController {
 		if (requestMap == null) {
 			return new HashMap<String, Object>();
 		}
-		Object body = requestMap.get("body");
+		Object body = requestMap.get("body"); 
 		if (body instanceof Map) {
 			return (Map<String, Object>) body;
 		}

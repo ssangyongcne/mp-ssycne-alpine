@@ -1,7 +1,7 @@
 package kr.co.sscm.alpine.event.dto;
 
 /** Event list row response DTO. */
-public class AlpineEventSummaryResponse {
+public class AlpineEventSummaryResponse { 
 
 	private Long eventNo;        // 산행차수
 	private String userNo;    	// 사번

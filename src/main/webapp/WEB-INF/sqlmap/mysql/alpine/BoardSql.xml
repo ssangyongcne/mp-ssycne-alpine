@@ -63,7 +63,7 @@
 	<select id="selectBoardCount" parameterType="map" resultType="int">
 		/* BoardDao.selectBoardCount */
 		SELECT COUNT(1)
-		<include refid="boardListWhere" />
+		<include refid="boardListWhere" /> 
 	</select>
 
 	<select id="selectBoardList" parameterType="map" resultMap="boardSummaryResultMap">
