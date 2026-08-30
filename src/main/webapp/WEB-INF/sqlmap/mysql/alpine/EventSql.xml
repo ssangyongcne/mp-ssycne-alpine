@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ssyc.AlpineEventDao">
+
+	<resultMap id="AlpineEventSummaryResponse" type="kr.co.sscm.alpine.event.dto.AlpineEventSummaryResponse">
+		<id property="eventNo" column="EVENT_NO" />
+		<id property="userNo" column="USER_NO" />
+		<result property="userNm" column="USER_NM" />
+		<result property="deptNm" column="DEPT_NM" />
+		<result property="dutyNm" column="DUTY_NM" />
+		<result property="memberYN" column="MEMBER_YN" />
+
+	</resultMap>
+	<resultMap id="AlpineEventCountResponse" type="kr.co.sscm.alpine.event.dto.AlpineEventCountResponse">
+		<id property="memberYN" column="MEMBER_YN" />
+		<result property="cnt" column="CNT" />
+	</resultMap>
+
+	<!-- TODO: 공통 조건절 -->
+	<sql id="eventListWhere">
+		FROM		morpheus.AP_HISTORY T1
+		JOIN		morpheus.AP_USER T2 on T1.USER_NO=T2.USER_NO 
+		WHERE	 	T1.EVENT_NO = #{eventNo}
+	</sql>
+
+	<!-- TODO: 산행참여자 인원수 count -->
+	<select id="selectEventCount" parameterType="long" resultMap="AlpineEventCountResponse">
+		/* AlpineEventDao.selectEventCount */
+		<!-- SELECT COUNT(1) -->
+		SELECT 		CASE WHEN T2.MEMBER_YN='Y' THEN 'Y' ELSE 'N' END AS MEMBER_YN,
+					COUNT(*) AS CNT
+		<include refid="eventListWhere" />
+		GROUP BY	CASE WHEN T2.MEMBER_YN='Y' THEN 'Y' ELSE 'N' END
+		ORDER BY 	T2.MEMBER_YN DESC
+	</select>
+	
+	<!-- TODO: 산행참여자 목록 조회 쿼리 -->
+	<select id="selectEventList" parameterType="long" resultMap="AlpineEventSummaryResponse">
+		/* AlpineEventDao.selectEventList */
+		SELECT	 	T1.EVENT_NO as EVENT_NO,
+					T1.USER_NO as USER_NO,
+					T2.USER_NM as USER_NM,
+					T2.MEMBER_YN as MEMBER_YN, 
+					T2.DEPT_NM as DEPT_NM,
+					T2.DUTY_NM as DUTY_NM
+		<include refid="eventListWhere" />
+		ORDER BY	T2.USER_NM ASC
+	</select>
+
+</mapper>
