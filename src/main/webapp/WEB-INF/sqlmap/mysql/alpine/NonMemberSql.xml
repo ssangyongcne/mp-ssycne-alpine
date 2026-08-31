@@ -38,7 +38,7 @@
                  FROM ( SELECT USER_NO,
                                EVENT_NO,
                                CASE WHEN CHAR_LENGTH(EVENT_NM) > 11
-                                    THEN CONCAT(LEFT(EVENT_NM, 9), '..')
+                                    THEN CONCAT(LEFT(EVENT_NM, 11), '..')
                                     ELSE EVENT_NM
                                 END AS EVENT_NM
                           FROM ( SELECT B.USER_NO,
