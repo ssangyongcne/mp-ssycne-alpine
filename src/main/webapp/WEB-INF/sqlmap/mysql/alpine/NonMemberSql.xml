@@ -35,12 +35,19 @@
 		FROM AP_USER b
    LEFT JOIN ( SELECT X.USER_NO,
                       GROUP_CONCAT(X.EVENT_NM ORDER BY X.EVENT_NO DESC SEPARATOR '/') AS EVENT_NM
-                 FROM ( SELECT B.USER_NO,
-                               A.EVENT_NO,
-                               CONCAT(A.EVENT_NO, '차 ', A.EVENT_NM) AS EVENT_NM
-                          FROM AP_EVENT A
-                     LEFT JOIN AP_HISTORY B
-                            ON A.EVENT_NO = B.EVENT_NO
+                 FROM ( SELECT USER_NO,
+                               EVENT_NO,
+                               CASE WHEN CHAR_LENGTH(EVENT_NM) > 11
+                                    THEN CONCAT(LEFT(EVENT_NM, 9), '..')
+                                    ELSE EVENT_NM
+                                END AS EVENT_NM
+                          FROM ( SELECT B.USER_NO,
+                                        A.EVENT_NO,
+                                        CONCAT(A.EVENT_NO, '차 ', A.EVENT_NM) AS EVENT_NM
+                                   FROM AP_EVENT A
+                              LEFT JOIN AP_HISTORY B
+                                     ON A.EVENT_NO = B.EVENT_NO
+                               ) H
                       ) X
                 WHERE X.USER_NO IS NOT NULL
              GROUP BY X.USER_NO
