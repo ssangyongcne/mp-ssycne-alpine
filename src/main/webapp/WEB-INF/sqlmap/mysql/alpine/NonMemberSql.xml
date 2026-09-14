@@ -5,6 +5,7 @@
 
 	<resultMap id="AlpineNonMemberResultMap" type="kr.co.sscm.alpine.nonmember.dto.AlpineNonMemberResponse">
 		<id property="userNo" column="USER_NO" />
+		<result property="compNm" column="COMP_NM" />
 		<result property="userNm" column="USER_NM" />
 		<result property="deptNm" column="DEPT_NM" />
 		<result property="dutyNm" column="DUTY_NM" />
@@ -22,6 +23,7 @@
 		/* AlpineNonMemberDao.selectNonMemberList */
 		SELECT
 			b.USER_NO AS USER_NO,
+		    b.COMP_NM AS COMP_NM,
 			b.USER_NM AS USER_NM,
 			b.DEPT_NM AS DEPT_NM,
 			b.DUTY_NM AS DUTY_NM,

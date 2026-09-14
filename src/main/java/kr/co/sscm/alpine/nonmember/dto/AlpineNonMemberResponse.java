@@ -3,8 +3,9 @@ package kr.co.sscm.alpine.nonmember.dto;
 import java.util.List;
 
 public class AlpineNonMemberResponse {
-
+	
 	private String userNo;
+	private String compNm;
 	private String userNm;
 	private String deptNm;
 	private String dutyNm;
@@ -15,9 +16,11 @@ public class AlpineNonMemberResponse {
 	private String loginDdtm;
 	private String pw;
 	private String eventNm;
-
+	
 	public String getUserNo() { return userNo; }
 	public void setUserNo(String userNo) { this.userNo = userNo; }
+	public String getCompNm() { return compNm; }
+	public void setCompNm(String compNm) { this.compNm = compNm; }
 	public String getUserNm() { return userNm; }
 	public void setUserNm(String userNm) { this.userNm = userNm; }
 	public String getDeptNm() { return deptNm; }
